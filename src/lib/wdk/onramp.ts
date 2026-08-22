@@ -37,12 +37,13 @@ export async function buildBuyUrl (address: string, amountCents: number): Promis
   const { buyUrl } = await moonpay.buy({
     cryptoAsset: MOONPAY_ASSET,
     fiatCurrency: 'usd',
-    // MoonPay habla en centavos, igual que nosotros.
+    // MoonPay speaks in cents, same as we do.
     fiatAmount: BigInt(Math.round(amountCents)),
     config: {
-      colorCode: '#9fe870',
+      // Settld's own lime, so the checkout doesn't look like it belongs to somebody else.
+      colorCode: '#c3f04e',
       theme: 'light',
-      language: 'es',
+      language: 'en',
       redirectURL: typeof window !== 'undefined' ? `${window.location.origin}/home` : undefined
     }
   })

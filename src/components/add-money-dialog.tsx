@@ -16,7 +16,8 @@ import { buildBuyUrl, isOnrampAvailable } from '@/lib/wdk/onramp'
 
 // Contract: AddMoneyDialog
 // Props: address (required), onFunded (callback after funds land), children (the trigger)
-// Variants: menu → card | receive | test funds
+// Variants: menu → card | receive | test funds. The card row only exists when an
+//   on-ramp key is configured.
 // States: menu | card (pick amount) | opening | receive | test (loading/error) | copied
 // Accessibility: Radix Dialog (focus trapped, Escape closes). The QR has alt text and the
 //   address is written out for anyone who can't scan.
@@ -147,13 +148,16 @@ export function AddMoneyDialog ({
 
         {view === 'menu' && (
           <div className="space-y-2">
-            <MethodRow
-              icon={<CreditCard aria-hidden />}
-              title="With a card"
-              subtitle={cardAvailable ? 'Debit or credit' : 'Not available right now'}
-              disabled={!cardAvailable}
-              onClick={() => setView('card')}
-            />
+            {/* No key, no row. A permanently greyed-out option is worse than one that
+                isn't there: it takes up the first slot and leads nowhere. */}
+            {cardAvailable && (
+              <MethodRow
+                icon={<CreditCard aria-hidden />}
+                title="With a card"
+                subtitle="Debit or credit"
+                onClick={() => setView('card')}
+              />
+            )}
             <MethodRow
               icon={<QrCode aria-hidden />}
               title="Get paid"
@@ -250,21 +254,18 @@ function MethodRow ({
   icon,
   title,
   subtitle,
-  disabled,
   onClick
 }: {
   icon: React.ReactNode
   title: string
   subtitle: string
-  disabled?: boolean
   onClick: () => void
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      disabled={disabled}
-      className="flex w-full items-center gap-4 rounded-2xl bg-card px-4 py-4 text-left ring-1 ring-border transition-all disabled:opacity-50 motion-safe:not-disabled:hover:scale-[1.01] not-disabled:hover:ring-ring/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+      className="flex w-full items-center gap-4 rounded-2xl bg-card px-4 py-4 text-left ring-1 ring-border transition-all motion-safe:hover:scale-[1.01] hover:ring-ring/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
     >
       <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary [&_svg]:size-5">
         {icon}
@@ -273,7 +274,7 @@ function MethodRow ({
         <span className="block font-bold">{title}</span>
         <span className="block text-xs text-muted-foreground">{subtitle}</span>
       </span>
-      {!disabled && <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />}
+      <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
     </button>
   )
 }

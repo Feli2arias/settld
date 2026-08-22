@@ -167,7 +167,7 @@ and doesn't care — that there's a blockchain underneath:
 
 | | What it does | Status |
 |---|---|---|
-| **With a card** | Opens MoonPay's checkout via WDK. Pay by debit or credit and the funds land straight in the wallet. | Needs a key (below) |
+| **With a card** | Opens MoonPay's checkout via WDK. Pay by debit or credit and the funds land straight in the wallet. | Hidden until a key is set (below) |
 | **Get paid** | Shows a QR and the address so someone else can send you money. | Working |
 | **Test funds** | $50 from the treasury. | Working |
 
@@ -176,8 +176,9 @@ No screen says "wallet", "token" or "blockchain".
 
 #### Turning on card payments
 
-The button only shows up once a key is configured — we'd rather hide it than offer
-something that leads nowhere. Get a publishable key at
+The row only shows up once a key is configured — a permanently greyed-out option is worse
+than one that isn't there: it takes the first slot in the menu and leads nowhere. Get a
+publishable key at
 [dashboard.moonpay.com](https://dashboard.moonpay.com/signup) and add to `.env.local`:
 
 ```
