@@ -10,9 +10,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { api } from '@/lib/client/api'
 import { saveSeed, saveSession } from '@/lib/client/vault'
+import { encryptSeed } from '@/lib/client/vault-crypto'
 import { deriveAddress, generateSeedPhrase } from '@/lib/wdk/wallet'
 
 type Step = 'form' | 'creating'
+
+/** Corta pero no ridícula: el vault se rompe a fuerza bruta si la contraseña es floja. */
+const MIN_PASSWORD = 8
 
 /**
  * Crear cuenta = crear wallet. Para el usuario es un solo paso: pone su nombre y
@@ -26,10 +30,12 @@ export default function OnboardingPage () {
   const router = useRouter()
   const [name, setName] = useState('')
   const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [step, setStep] = useState<Step>('form')
   const [error, setError] = useState<string | null>(null)
 
-  const canSubmit = name.trim().length >= 2 && username.trim().length >= 3
+  const canSubmit =
+    name.trim().length >= 2 && username.trim().length >= 3 && password.length >= MIN_PASSWORD
 
   async function handleSubmit (event: React.FormEvent) {
     event.preventDefault()
@@ -42,7 +48,11 @@ export default function OnboardingPage () {
       const seedPhrase = await generateSeedPhrase()
       const walletAddress = await deriveAddress(seedPhrase)
 
-      const user = await api.createUser({ name, username, walletAddress })
+      // Ciframos la wallet con la contraseña acá, en el dispositivo. Al servidor le
+      // llega el bulto cerrado; la contraseña no sale nunca de esta pantalla.
+      const vault = await encryptSeed(seedPhrase, password)
+
+      const user = await api.createUser({ name, username, walletAddress, vault })
 
       // La seed primero: si algo falla después, el usuario no queda con una cuenta
       // en el servidor cuya wallet ya no puede abrir.
@@ -118,6 +128,24 @@ export default function OnboardingPage () {
             </p>
           </div>
 
+          <div className="space-y-2.5">
+            <Label htmlFor="password" className="eyebrow">Contraseña</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={event => setPassword(event.target.value)}
+              placeholder="Mínimo 8 caracteres"
+              autoComplete="new-password"
+              aria-describedby="password-hint"
+              className="h-14 rounded-2xl px-5 text-lg"
+            />
+            <p id="password-hint" className="text-xs text-muted-foreground">
+              Con esto entrás desde cualquier dispositivo. No la guardamos en ningún
+              lado, así que si la perdés vas a necesitar tu frase de recuperación.
+            </p>
+          </div>
+
           {error && (
             <p role="alert" className="rounded-2xl bg-debit-surface px-4 py-3 text-sm font-semibold text-debit">
               {error}
@@ -136,7 +164,7 @@ export default function OnboardingPage () {
               href="/login"
               className="font-bold text-foreground underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
             >
-              Entrá con tu frase
+              Entrá
             </Link>
           </p>
         </div>

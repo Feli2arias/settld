@@ -4,7 +4,7 @@
  */
 
 import type { GroupDetail } from '@/lib/store/db'
-import type { Expense, Group, Settlement, SettlementStatus, User } from '@/lib/split/types'
+import type { EncryptedVault, Expense, Group, Settlement, SettlementStatus, User } from '@/lib/split/types'
 
 export class ApiError extends Error {
   constructor (message: string, readonly status: number) {
@@ -41,8 +41,16 @@ export const api = {
   lookupUserByAddress: (address: string) =>
     request<User | null>(`/api/users/lookup?address=${encodeURIComponent(address)}`),
 
-  createUser: (input: { name: string, username: string, walletAddress: string }) =>
-    post<User>('/api/users', input),
+  createUser: (input: {
+    name: string
+    username: string
+    walletAddress: string
+    vault: EncryptedVault
+  }) => post<User>('/api/users', input),
+
+  /** El bulto cifrado de una cuenta, para intentar abrirlo con la contraseña. */
+  getVault: (username: string) =>
+    request<EncryptedVault | null>(`/api/users/vault?username=${encodeURIComponent(username)}`),
 
   listGroups: (userId: string) =>
     request<Group[]>(`/api/groups?userId=${encodeURIComponent(userId)}`),

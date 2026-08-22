@@ -9,12 +9,31 @@
 export const CENTS_PER_UNIT = 100
 export const TOKEN_UNITS_PER_CENT = 10_000
 
+/**
+ * La wallet cifrada con la contraseña del usuario.
+ *
+ * Es lo único que Split guarda de las claves, y sin la contraseña —que nunca llega
+ * al servidor— no se puede abrir. Por eso nunca viaja junto al resto del usuario:
+ * se pide aparte, sólo al iniciar sesión.
+ */
+export interface EncryptedVault {
+  cipher: string
+  salt: string
+  iv: string
+  iterations: number
+}
+
 export interface User {
   id: string
   name: string
   username: string
   /** Address de la smart account de WDK. La derivamos en el browser al crear la cuenta. */
   walletAddress: string
+}
+
+/** El usuario tal como se guarda. El vault no sale de acá salvo al iniciar sesión. */
+export interface StoredUser extends User {
+  vault?: EncryptedVault
 }
 
 export interface Group {

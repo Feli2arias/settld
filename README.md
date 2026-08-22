@@ -157,14 +157,36 @@ compra", no como "mirá cómo entra la plata".
 
 ### Cuenta y recuperación
 
-La cuenta **es** la wallet, así que la credencial para volver a entrar es la frase de
-recuperación. El navegador deriva la address de la frase y le pregunta al servidor de quién
-es; la frase nunca sale del dispositivo, ni siquiera al iniciar sesión.
+La cuenta **es** la wallet. Eso plantea un problema: si la credencial fuera la frase de
+12 palabras, entrar se sentiría cualquier cosa menos una app normal. Y si el servidor
+guardara la clave para poder ofrecer usuario y contraseña, Split sería custodial y podría
+gastar la plata de sus usuarios.
 
-- Al crear la cuenta no le mostramos la frase a nadie: eso arruinaría el momento de entrada.
-- Está a un toque, tocando tu nombre en la pantalla de inicio. Ahí también está tu address
-  y el botón para cerrar sesión.
-- Para entrar desde otro dispositivo: **Ya tengo cuenta** → pegar las 12 palabras.
+La salida es cifrar la wallet con la contraseña, en el dispositivo:
+
+1. Al crear la cuenta, el navegador genera la wallet y la cifra con la contraseña
+   (PBKDF2 con 300.000 vueltas + AES-GCM, todo con WebCrypto, sin dependencias).
+2. Al servidor le llega **sólo el bulto cifrado**. La contraseña no sale nunca del
+   dispositivo, y sin ella el bulto no abre ni para nosotros.
+3. Al entrar, el navegador se baja el bulto, lo abre con la contraseña y recupera la wallet.
+
+Resultado: se entra con usuario y contraseña como en cualquier app, y las claves siguen
+siendo del usuario.
+
+**La frase de recuperación queda como plan B**, para cuando la contraseña se olvidó. Está
+a un toque, tocando tu nombre en la pantalla de inicio, junto con tu address y el botón de
+cerrar sesión. Al crear la cuenta no se la mostramos a nadie: eso arruinaría el momento
+de entrada.
+
+Detalles que importan:
+
+- El vault nunca viaja junto al resto del usuario. `/api/users/lookup` y el detalle de
+  grupo lo sacan de la respuesta; se entrega sólo por `/api/users/vault`, al iniciar sesión.
+- AES-GCM verifica integridad, así que una contraseña equivocada o un bulto manipulado
+  fallan en vez de devolver basura.
+- **Límite conocido**: cualquiera puede pedir el vault de un usuario y probarle contraseñas
+  offline. Las 300.000 vueltas lo hacen caro, pero contra una contraseña floja no alcanza.
+  Una app de verdad necesita además rate limiting y exigir contraseñas más fuertes.
 
 Efecto secundario útil para la demo: con esto podés mostrar el flujo de dos personas en un
 solo dispositivo, cerrando sesión y entrando con la otra cuenta.
@@ -192,7 +214,8 @@ Funciona end-to-end, verificado en cadena:
 
 - [x] Onboarding que crea la wallet con WDK
 - [x] Cargar saldo: tarjeta (MoonPay vía WDK), QR para recibir, o fondos de prueba
-- [x] Volver a entrar con la frase de recuperación, y cerrar sesión
+- [x] Entrar con usuario y contraseña (la wallet se cifra con la contraseña, en el dispositivo)
+- [x] Frase de recuperación como plan B, y cerrar sesión
 - [x] Address y balance reales
 - [x] Grupos y miembros por `@usuario`
 - [x] Gastos divididos en partes iguales

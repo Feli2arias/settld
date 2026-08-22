@@ -15,10 +15,10 @@
 
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import type { Expense, Group, Settlement, User } from '@/lib/split/types'
+import type { Expense, Group, Settlement, StoredUser } from '@/lib/split/types'
 
 export interface Database {
-  users: User[]
+  users: StoredUser[]
   groups: Group[]
   expenses: Expense[]
   settlements: Settlement[]

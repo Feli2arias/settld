@@ -47,6 +47,38 @@ export function requireWalletAddress (value: unknown, field = 'la address'): str
   return address
 }
 
+/**
+ * El bulto cifrado que manda el navegador.
+ *
+ * El servidor no puede abrirlo ni verificar qué hay adentro, así que lo único que
+ * puede hacer es asegurarse de que tenga la forma correcta y un tamaño razonable.
+ */
+export function requireVault (value: unknown) {
+  if (typeof value !== 'object' || value === null) throw new ValidationError('Falta la wallet cifrada')
+
+  const vault = value as Record<string, unknown>
+  const base64 = /^[A-Za-z0-9+/]+={0,2}$/
+
+  for (const field of ['cipher', 'salt', 'iv'] as const) {
+    const part = vault[field]
+    if (typeof part !== 'string' || part.length === 0 || part.length > 4096 || !base64.test(part)) {
+      throw new ValidationError('La wallet cifrada llegó dañada')
+    }
+  }
+
+  // Menos vueltas de las que usamos significaría una contraseña más fácil de romper.
+  if (typeof vault.iterations !== 'number' || vault.iterations < 100_000 || vault.iterations > 5_000_000) {
+    throw new ValidationError('La wallet cifrada llegó dañada')
+  }
+
+  return {
+    cipher: vault.cipher as string,
+    salt: vault.salt as string,
+    iv: vault.iv as string,
+    iterations: vault.iterations
+  }
+}
+
 const USERNAME = /^[a-z0-9_]{3,20}$/
 
 export function requireUsername (value: unknown): string {

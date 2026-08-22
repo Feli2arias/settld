@@ -8,7 +8,7 @@
  */
 
 import { randomUUID } from 'node:crypto'
-import type { Expense, Group, Settlement, SettlementStatus, User } from '@/lib/split/types'
+import type { EncryptedVault, Expense, Group, Settlement, SettlementStatus, StoredUser, User } from '@/lib/split/types'
 import { type Database, loadDatabase, saveDatabase } from './backend'
 
 /** Serializa las escrituras para que dos requests simultáneos no se pisen. */
@@ -34,13 +34,29 @@ const normalizeUsername = (username: string) => username.trim().replace(/^@/, ''
 
 // --- Usuarios ---
 
+/**
+ * Saca el vault antes de devolver un usuario.
+ *
+ * El vault está cifrado, pero igual no lo repartimos: cuanto menos circule, menos
+ * chances de que alguien se lo lleve para probarle contraseñas tranquilo en su casa.
+ * Se entrega sólo por `findVaultByUsername`, al iniciar sesión.
+ */
+const withoutVault = ({ vault: _vault, ...user }: StoredUser): User => user
+
 export async function listUsers (): Promise<User[]> {
-  return (await read()).users
+  return (await read()).users.map(withoutVault)
 }
 
 export async function findUserByUsername (username: string): Promise<User | null> {
   const target = normalizeUsername(username)
-  return (await read()).users.find(u => u.username === target) ?? null
+  const user = (await read()).users.find(u => u.username === target)
+  return user ? withoutVault(user) : null
+}
+
+/** El bulto cifrado de una cuenta. Sin la contraseña del usuario no sirve de nada. */
+export async function findVaultByUsername (username: string): Promise<EncryptedVault | null> {
+  const target = normalizeUsername(username)
+  return (await read()).users.find(u => u.username === target)?.vault ?? null
 }
 
 /**
@@ -50,11 +66,13 @@ export async function findUserByUsername (username: string): Promise<User | null
  */
 export async function findUserByWalletAddress (address: string): Promise<User | null> {
   const target = address.toLowerCase()
-  return (await read()).users.find(u => u.walletAddress.toLowerCase() === target) ?? null
+  const user = (await read()).users.find(u => u.walletAddress.toLowerCase() === target)
+  return user ? withoutVault(user) : null
 }
 
 export async function findUserById (id: string): Promise<User | null> {
-  return (await read()).users.find(u => u.id === id) ?? null
+  const user = (await read()).users.find(u => u.id === id)
+  return user ? withoutVault(user) : null
 }
 
 export class UsernameTakenError extends Error {
@@ -64,20 +82,26 @@ export class UsernameTakenError extends Error {
   }
 }
 
-export function createUser (input: { name: string, username: string, walletAddress: string }): Promise<User> {
+export function createUser (input: {
+  name: string
+  username: string
+  walletAddress: string
+  vault?: EncryptedVault
+}): Promise<User> {
   const username = normalizeUsername(input.username)
 
   return mutate(db => {
     if (db.users.some(u => u.username === username)) throw new UsernameTakenError(username)
 
-    const user: User = {
+    const user: StoredUser = {
       id: randomUUID(),
       name: input.name.trim(),
       username,
-      walletAddress: input.walletAddress
+      walletAddress: input.walletAddress,
+      vault: input.vault
     }
     db.users.push(user)
-    return user
+    return withoutVault(user)
   })
 }
 
@@ -119,7 +143,7 @@ export async function getGroupDetail (groupId: string): Promise<GroupDetail | nu
 
   return {
     group,
-    members: db.users.filter(u => group.memberIds.includes(u.id)),
+    members: db.users.filter(u => group.memberIds.includes(u.id)).map(withoutVault),
     expenses: db.expenses.filter(e => e.groupId === groupId),
     settlements: db.settlements.filter(s => s.groupId === groupId)
   }
