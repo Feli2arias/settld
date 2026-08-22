@@ -36,16 +36,15 @@ export interface StoredUser extends User {
   vault?: EncryptedVault
 }
 
-export interface Group {
+/**
+ * A settld: one thing somebody paid for, split between some people.
+ *
+ * There are no groups. A dinner is not a folder you file expenses into, it's the expense
+ * itself — so this is the whole unit. Whoever paid owns it, and is the only one who can
+ * change or remove it.
+ */
+export interface Settld {
   id: string
-  name: string
-  memberIds: string[]
-  createdAt: string
-}
-
-export interface Expense {
-  id: string
-  groupId: string
   description: string
   /** Total amount in cents. */
   amountCents: number
@@ -58,7 +57,6 @@ export type SettlementStatus = 'pending' | 'confirmed' | 'failed'
 
 export interface Settlement {
   id: string
-  groupId: string
   from: string
   to: string
   amountCents: number
@@ -70,9 +68,10 @@ export interface Settlement {
   createdAt: string
 }
 
-/** A transfer somebody has to make to settle their share. */
-export interface Payment {
-  from: string
-  to: string
-  amountCents: number
+/** What one person owes another, once everything between them has been netted out. */
+export interface Debt {
+  /** The other person. */
+  userId: string
+  /** Positive: they owe you. Negative: you owe them. Never zero — settled pairs are dropped. */
+  netCents: number
 }

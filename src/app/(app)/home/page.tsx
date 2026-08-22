@@ -6,13 +6,13 @@ import { ArrowDownLeft, ArrowUpRight, ChevronRight, CreditCard, Plus, Wallet } f
 import { AddMoneyDialog } from '@/components/add-money-dialog'
 import { AppShell } from '@/components/app-shell'
 import { RecentActivity } from '@/components/dashboard/activity-list'
-import { FocusCard } from '@/components/dashboard/focus-card'
-import { OpenGroups } from '@/components/dashboard/group-list'
 import { MonthCard } from '@/components/dashboard/month-card'
 import { Panel } from '@/components/dashboard/panel'
+import { PeopleList } from '@/components/dashboard/people-list'
+import { SettldList } from '@/components/dashboard/settld-list'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { Button } from '@/components/ui/button'
-import { useGroupDetails } from '@/lib/client/use-group-details'
+import { useLedger } from '@/lib/client/use-ledger'
 import { useRequireSession } from '@/lib/client/use-session'
 import { buildDashboard } from '@/lib/split/dashboard'
 import { getBalanceCentsOf } from '@/lib/wdk/wallet'
@@ -20,15 +20,14 @@ import { getBalanceCentsOf } from '@/lib/wdk/wallet'
 /**
  * The dashboard.
  *
- * Every other screen in Settld looks at one thing at a time: a group, an expense, a
- * payment. This one is the only place that answers the question you actually open the app
- * with — what is still open, and what do I do about it. So it leads with the three numbers
- * that matter (what you can spend, what you owe, what you're owed) and then puts the group
- * that needs you next to the list of everything else.
+ * Every other screen looks at one thing at a time: a settld, a person, a payment. This one
+ * is the only place that answers the question you actually open the app with — what is
+ * still open, and what do I do about it. So it leads with the three numbers that matter
+ * (what you can spend, what you owe, what you're owed) and then puts the people either
+ * side of your balance next to what produced it.
  *
- * It's the widest layout in the app: two columns of cards on desktop, a single stack on a
- * phone. Nothing here is decorative — every figure is derived from real groups by
- * `buildDashboard`, which is a pure function and is where the arithmetic is tested.
+ * Nothing here is decorative: every figure is derived from your ledger by `buildDashboard`,
+ * which is a pure function and is where the arithmetic is tested.
  */
 
 const greeting = () => {
@@ -44,7 +43,7 @@ const plural = (count: number, one: string, many: string) =>
 
 export default function HomePage () {
   const session = useRequireSession()
-  const details = useGroupDetails(session?.userId)
+  const { ledger } = useLedger(session?.userId)
   const [balanceCents, setBalanceCents] = useState<number | null>(null)
 
   /** The balance comes from the blockchain, not from our database. */
@@ -63,13 +62,7 @@ export default function HomePage () {
 
   if (!session) return null
 
-  const board = details ? buildDashboard(details, session.userId) : null
-
-  // "Add expense" needs a group. Whichever one is under the spotlight is the one you were
-  // most likely about to touch; with no groups at all, the button creates the first one.
-  const addExpenseHref = board?.focus
-    ? `/groups/${board.focus.group.id}/expenses/new`
-    : '/groups/new'
+  const board = ledger ? buildDashboard(ledger, session.userId) : null
 
   return (
     <AppShell width="full" className="gap-4 lg:gap-5">
@@ -93,9 +86,9 @@ export default function HomePage () {
 
         <div className="flex flex-wrap gap-2">
           <Button size="pill" asChild>
-            <Link href={addExpenseHref}>
+            <Link href="/settlds/new">
               <Plus aria-hidden />
-              Add expense
+              New settld
             </Link>
           </Button>
 
@@ -123,9 +116,9 @@ export default function HomePage () {
           label="You owe"
           cents={board?.youOweCents ?? null}
           caption={
-            !board || board.pendingPayments === 0
+            !board || board.owing.length === 0
               ? "You're all clear"
-              : plural(board.pendingPayments, 'pending payment', 'pending payments')
+              : plural(board.owing.length, 'person to pay', 'people to pay')
           }
           icon={ArrowUpRight}
           tone="debit"
@@ -135,9 +128,9 @@ export default function HomePage () {
           label="You are owed"
           cents={board?.owedToYouCents ?? null}
           caption={
-            !board || board.peopleOwingYou === 0
+            !board || board.owed.length === 0
               ? 'Nobody owes you right now'
-              : `${plural(board.peopleOwingYou, 'friend owes', 'friends owe')} you`
+              : `${plural(board.owed.length, 'friend owes', 'friends owe')} you`
           }
           icon={Wallet}
           tone="credit"
@@ -148,9 +141,25 @@ export default function HomePage () {
         ? <Panel><p className="py-8 text-center text-sm text-muted-foreground">Loading…</p></Panel>
         : (
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] xl:items-start">
-              <div id="groups" className="flex min-w-0 scroll-mt-6 flex-col gap-4">
-                <section aria-labelledby="groups-label">
-                  <OpenGroups groups={board.groups} />
+              <div className="flex min-w-0 flex-col gap-4">
+                <section aria-labelledby="owing-label">
+                  <PeopleList
+                    title="You owe"
+                    id="owing-label"
+                    debts={board.owing}
+                    direction="owing"
+                    emptyLine="You don't owe anybody."
+                  />
+                </section>
+
+                <section aria-labelledby="owed-label">
+                  <PeopleList
+                    title="Owed to you"
+                    id="owed-label"
+                    debts={board.owed}
+                    direction="owed"
+                    emptyLine="Nobody owes you."
+                  />
                 </section>
 
                 <section id="activity" aria-labelledby="activity-label" className="scroll-mt-6">
@@ -159,11 +168,14 @@ export default function HomePage () {
               </div>
 
               <div className="flex min-w-0 flex-col gap-4">
-                {board.focus && (
-                  <section aria-labelledby="focus-label">
-                    <FocusCard focus={board.focus} userId={session.userId} />
-                  </section>
-                )}
+                <section aria-labelledby="settlds-label">
+                  <SettldList
+                    settlds={board.settlds}
+                    people={ledger?.people ?? []}
+                    userId={session.userId}
+                    limit={6}
+                  />
+                </section>
 
                 <MonthCard month={board.month} />
               </div>

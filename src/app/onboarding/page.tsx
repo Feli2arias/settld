@@ -126,7 +126,7 @@ export default function OnboardingPage () {
               />
             </div>
             <p id="username-hint" className="text-xs text-muted-foreground">
-              This is how your friends will find you to add you to a group.
+              This is how your friends find you when they split something with you.
             </p>
           </div>
 

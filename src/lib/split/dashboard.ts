@@ -1,72 +1,44 @@
 /**
- * The dashboard's arithmetic.
+ * What the screens show, derived from the ledger.
  *
- * The home screen is the only place in Settld that looks at every group at once: what
- * you're owed in total, what you owe in total, what happened lately and which group
- * still needs you. All of that is derived here, as pure functions over the data we
- * already fetch, so the screen itself only has to lay it out.
- *
- * Everything stays in cents and never touches the network.
+ * The dashboard, the activity screen and every list of settlds are built from the same
+ * two arrays the server hands over. Everything here is a pure function over them, which
+ * is why the arithmetic can be tested without a browser or a network.
  */
 
-import { computeNetBalances, settlementPlan, splitEqually } from './balances'
+import { balanceBetween, debtsOf, standingOf } from './balances'
 import { formatMoney } from '@/lib/wdk/money'
-import type { Expense, Group, Settlement, User } from './types'
+import type { Debt, Settld, Settlement, User } from './types'
 
-/** The shape `GET /api/groups/:id` returns. Declared here so this file owes nothing to the store. */
-export interface GroupDetailLike {
-  group: Group
-  members: User[]
-  expenses: Expense[]
+/** What `GET /api/ledger` returns. Declared here so this file owes nothing to the store. */
+export interface LedgerLike {
+  settlds: Settld[]
   settlements: Settlement[]
+  people: User[]
 }
 
-export interface GroupCard {
-  group: Group
-  /** Your balance in this group: positive if you're owed, negative if you owe. */
-  netCents: number
-  totalCents: number
-  expenseCount: number
-  memberCount: number
-  /** How many people in the group are still short. */
-  unpaidCount: number
-}
-
-export type ActivityKind = 'expense' | 'sent' | 'received' | 'other'
+export type ActivityKind = 'settld' | 'sent' | 'received'
 
 export interface ActivityItem {
   id: string
   kind: ActivityKind
   /** Already written out for the reader, amount included. */
   title: string
-  groupId: string
-  groupName: string
+  /** The settld or the person this row is about, for linking. */
+  settldId: string | null
+  personId: string | null
   status: Settlement['status'] | null
   /** Only a settlement has one, and only once it is on chain. */
   txHash: string | null
   at: string
 }
 
-export type MemberStatus = 'paid' | 'settled' | 'owes'
-
-export interface MemberShare {
-  user: User
-  shareCents: number
-  status: MemberStatus
-}
-
-/** The one group the dashboard puts under the spotlight. */
-export interface FocusGroup {
-  group: Group
-  totalCents: number
-  netCents: number
-  /** How much of the total you put in yourself. */
-  paidByYouCents: number
-  members: MemberShare[]
+export interface PersonDebt extends Debt {
+  person: User
 }
 
 export interface MonthStats {
-  expenses: number
+  settlds: number
   movedCents: number
   settled: number
 }
@@ -74,13 +46,13 @@ export interface MonthStats {
 export interface Dashboard {
   owedToYouCents: number
   youOweCents: number
-  /** Distinct people who still owe you something, anywhere. */
-  peopleOwingYou: number
-  /** Transfers you still have to make, anywhere. */
-  pendingPayments: number
-  groups: GroupCard[]
+  /** Who owes you, biggest first. */
+  owed: PersonDebt[]
+  /** Who you owe, biggest first. */
+  owing: PersonDebt[]
+  /** Your settlds, newest first. */
+  settlds: Settld[]
   activity: ActivityItem[]
-  focus: FocusGroup | null
   month: MonthStats
 }
 
@@ -90,82 +62,51 @@ const firstName = (name: string) => name.split(' ')[0]
 
 const byNewestFirst = (a: { at: string }, b: { at: string }) => b.at.localeCompare(a.at)
 
-/**
- * Turns a group's expenses into what each member put in and where they stand.
- * Somebody who paid for something and isn't short is "paid"; somebody who never paid but
- * is square is "settled"; anybody below zero "owes".
- */
-export function memberShares (detail: GroupDetailLike): MemberShare[] {
-  const balances = computeNetBalances(detail.expenses, detail.settlements)
-
-  return detail.members.map(user => {
-    let shareCents = 0
-    let paidSomething = false
-
-    for (const expense of detail.expenses) {
-      if (expense.paidBy === user.id) paidSomething = true
-
-      const index = expense.splitBetween.indexOf(user.id)
-      if (index === -1) continue
-
-      shareCents += splitEqually(expense.amountCents, expense.splitBetween.length)[index]
-    }
-
-    const net = balances[user.id] ?? 0
-    const status: MemberStatus = net < 0 ? 'owes' : paidSomething ? 'paid' : 'settled'
-
-    return { user, shareCents, status }
-  })
+const nameIn = (people: User[], id: string) => {
+  const person = people.find(p => p.id === id)
+  return person ? firstName(person.name) : 'Someone'
 }
 
-/** Everything that has happened in a group, newest first, written out in plain words. */
-export function groupActivity (detail: GroupDetailLike, userId: string): ActivityItem[] {
-  const nameOf = (id: string) => {
-    const member = detail.members.find(m => m.id === id)
-    return member ? firstName(member.name) : 'Someone'
-  }
+const personIn = (people: User[], id: string): User =>
+  people.find(p => p.id === id) ?? { id, name: 'Someone', username: 'unknown', walletAddress: '' }
 
-  const expenses: ActivityItem[] = detail.expenses.map(expense => ({
-    id: expense.id,
-    kind: 'expense',
-    title: expense.paidBy === userId
-      ? `You added ${expense.description}`
-      : `${nameOf(expense.paidBy)} added ${expense.description}`,
-    groupId: detail.group.id,
-    groupName: detail.group.name,
+/** Every event, newest first, written out in plain words. */
+export function allActivity (ledger: LedgerLike, userId: string): ActivityItem[] {
+  const { people } = ledger
+
+  const settlds: ActivityItem[] = ledger.settlds.map(settld => ({
+    id: settld.id,
+    kind: 'settld',
+    title: settld.paidBy === userId
+      ? `You added ${settld.description}`
+      : `${nameIn(people, settld.paidBy)} added ${settld.description}`,
+    settldId: settld.id,
+    personId: settld.paidBy === userId ? null : settld.paidBy,
     status: null,
     txHash: null,
-    at: expense.createdAt
+    at: settld.createdAt
   }))
 
-  const settlements: ActivityItem[] = detail.settlements.map(settlement => {
+  const payments: ActivityItem[] = ledger.settlements.map(settlement => {
     const money = formatMoney(settlement.amountCents)
-
-    const [kind, title]: [ActivityKind, string] =
-      settlement.from === userId
-        ? ['sent', `You paid ${nameOf(settlement.to)} ${money}`]
-        : settlement.to === userId
-          ? ['received', `${nameOf(settlement.from)} paid you ${money}`]
-          : ['other', `${nameOf(settlement.from)} paid ${nameOf(settlement.to)} ${money}`]
+    const outgoing = settlement.from === userId
+    const other = outgoing ? settlement.to : settlement.from
 
     return {
       id: settlement.id,
-      kind,
-      title,
-      groupId: detail.group.id,
-      groupName: detail.group.name,
+      kind: outgoing ? 'sent' : 'received',
+      title: outgoing
+        ? `You paid ${nameIn(people, settlement.to)} ${money}`
+        : `${nameIn(people, settlement.from)} paid you ${money}`,
+      settldId: null,
+      personId: other,
       status: settlement.status,
       txHash: settlement.txHash ?? null,
       at: settlement.createdAt
     }
   })
 
-  return [...expenses, ...settlements].sort(byNewestFirst)
-}
-
-/** Every event in every group, newest first. The activity screen shows all of it. */
-export function allActivity (details: GroupDetailLike[], userId: string): ActivityItem[] {
-  return details.flatMap(detail => groupActivity(detail, userId)).sort(byNewestFirst)
+  return [...settlds, ...payments].sort(byNewestFirst)
 }
 
 export interface ActivityDay {
@@ -197,89 +138,52 @@ const sameMonth = (iso: string, now: Date) => {
 }
 
 /**
- * Everything the home screen shows, from the groups we already loaded.
+ * Everything the home screen shows.
  *
  * `now` is a parameter rather than a `new Date()` inside so the month stats are testable
  * and don't depend on the day the tests run.
  */
-export function buildDashboard (details: GroupDetailLike[], userId: string, now: Date = new Date()): Dashboard {
-  const groups: GroupCard[] = []
-  const activity: ActivityItem[] = []
-  const debtors = new Set<string>()
+export function buildDashboard (ledger: LedgerLike, userId: string, now: Date = new Date()): Dashboard {
+  const standing = standingOf(ledger.settlds, ledger.settlements, userId)
 
-  let owedToYouCents = 0
-  let youOweCents = 0
-  let pendingPayments = 0
-  const month: MonthStats = { expenses: 0, movedCents: 0, settled: 0 }
+  const withPerson = (debt: Debt): PersonDebt => ({ ...debt, person: personIn(ledger.people, debt.userId) })
 
-  for (const detail of details) {
-    const { group, expenses, settlements } = detail
-    const plan = settlementPlan(expenses, settlements, userId)
-    const balances = computeNetBalances(expenses, settlements)
+  const month: MonthStats = {
+    settlds: ledger.settlds.filter(settld => sameMonth(settld.createdAt, now)).length,
+    movedCents: 0,
+    settled: 0
+  }
 
-    if (plan.netCents > 0) owedToYouCents += plan.netCents
-    if (plan.netCents < 0) youOweCents += -plan.netCents
-
-    pendingPayments += plan.owes.length
-    for (const payment of plan.owed) debtors.add(payment.from)
-
-    groups.push({
-      group,
-      netCents: plan.netCents,
-      totalCents: expenses.reduce((sum, expense) => sum + expense.amountCents, 0),
-      expenseCount: expenses.length,
-      memberCount: group.memberIds.length,
-      unpaidCount: Object.values(balances).filter(value => value < 0).length
-    })
-
-    activity.push(...groupActivity(detail, userId))
-
-    month.expenses += expenses.filter(expense => sameMonth(expense.createdAt, now)).length
-
-    for (const settlement of settlements) {
-      if (settlement.status !== 'confirmed' || !sameMonth(settlement.createdAt, now)) continue
-      month.movedCents += settlement.amountCents
-      month.settled += 1
-    }
+  for (const settlement of ledger.settlements) {
+    if (settlement.status !== 'confirmed' || !sameMonth(settlement.createdAt, now)) continue
+    month.movedCents += settlement.amountCents
+    month.settled += 1
   }
 
   return {
-    owedToYouCents,
-    youOweCents,
-    peopleOwingYou: debtors.size,
-    pendingPayments,
-    // Whatever is still open comes first; among settled groups, the busiest.
-    groups: groups.sort((a, b) =>
-      Math.abs(b.netCents) - Math.abs(a.netCents) || b.expenseCount - a.expenseCount
-    ),
-    activity: activity.sort(byNewestFirst).slice(0, ACTIVITY_LIMIT),
-    focus: pickFocus(details, groups, userId),
+    owedToYouCents: standing.owedToYouCents,
+    youOweCents: standing.youOweCents,
+    owed: standing.debts.filter(d => d.netCents > 0).map(withPerson),
+    owing: standing.debts.filter(d => d.netCents < 0).map(withPerson),
+    settlds: [...ledger.settlds].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    activity: allActivity(ledger, userId).slice(0, ACTIVITY_LIMIT),
     month
   }
 }
 
-/**
- * The group that gets the big panel: the one where you have the most money at stake, and
- * failing that the one with the most going on. Showing nothing there would waste the best
- * spot on the screen.
- */
-function pickFocus (details: GroupDetailLike[], cards: GroupCard[], userId: string): FocusGroup | null {
-  const best = cards[0]
-  if (!best) return null
-
-  const detail = details.find(d => d.group.id === best.group.id)
-  if (!detail) return null
-
+/** What one person owes you, or you owe them, right now. Feeds the settle-up screen. */
+export function debtWith (ledger: LedgerLike, userId: string, otherId: string): PersonDebt {
   return {
-    group: best.group,
-    totalCents: best.totalCents,
-    netCents: best.netCents,
-    paidByYouCents: detail.expenses
-      .filter(expense => expense.paidBy === userId)
-      .reduce((sum, expense) => sum + expense.amountCents, 0),
-    members: memberShares(detail)
+    userId: otherId,
+    netCents: balanceBetween(ledger.settlds, ledger.settlements, userId, otherId),
+    person: personIn(ledger.people, otherId)
   }
 }
+
+/** Everyone with something open, in either direction. */
+export const openDebts = (ledger: LedgerLike, userId: string): PersonDebt[] =>
+  debtsOf(ledger.settlds, ledger.settlements, userId)
+    .map(debt => ({ ...debt, person: personIn(ledger.people, debt.userId) }))
 
 /**
  * The day something happened, the way a person would say it: "Today", "Yesterday",

@@ -2,17 +2,17 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, ExternalLink, Plus } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, ExternalLink, Plus } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
 import { Panel } from '@/components/dashboard/panel'
+import { useLedger } from '@/lib/client/use-ledger'
 import { useRequireSession } from '@/lib/client/use-session'
-import { useGroupDetails } from '@/lib/client/use-group-details'
 import { type ActivityKind, allActivity, groupByDay, timeLabel } from '@/lib/split/dashboard'
 import { explorerTxUrl } from '@/lib/wdk/config'
 import { cn } from '@/lib/utils'
 
 /**
- * Everything that has ever happened, across every group.
+ * Everything that has ever happened.
  *
  * The dashboard shows the last five, which answers "what did I miss". This screen answers
  * the other question: "did that payment actually go through, and when". So it is the only
@@ -23,10 +23,9 @@ import { cn } from '@/lib/utils'
  */
 
 const KINDS: Record<ActivityKind, { icon: typeof Plus, disc: string }> = {
-  expense: { icon: Plus, disc: 'bg-secondary text-muted-foreground' },
+  settld: { icon: Plus, disc: 'bg-secondary text-muted-foreground' },
   received: { icon: ArrowDownLeft, disc: 'bg-credit-surface text-credit' },
-  sent: { icon: ArrowUpRight, disc: 'bg-debit-surface text-debit' },
-  other: { icon: ArrowLeftRight, disc: 'bg-secondary text-muted-foreground' }
+  sent: { icon: ArrowUpRight, disc: 'bg-debit-surface text-debit' }
 }
 
 const STATUS = {
@@ -38,27 +37,27 @@ const STATUS = {
 const FILTERS = [
   { id: 'all', label: 'All' },
   { id: 'payments', label: 'Payments' },
-  { id: 'expenses', label: 'Expenses' }
+  { id: 'settlds', label: 'Settlds' }
 ] as const
 
 type Filter = (typeof FILTERS)[number]['id']
 
 export default function ActivityPage () {
   const session = useRequireSession()
-  const details = useGroupDetails(session?.userId)
+  const { ledger } = useLedger(session?.userId)
   const [filter, setFilter] = useState<Filter>('all')
 
   if (!session) return null
 
-  const history = details ? allActivity(details, session.userId) : null
+  const history = ledger ? allActivity(ledger, session.userId) : null
 
   const shown = history?.filter(item =>
     filter === 'all' ||
-    (filter === 'expenses' ? item.kind === 'expense' : item.kind !== 'expense')
+    (filter === 'settlds' ? item.kind === 'settld' : item.kind !== 'settld')
   )
 
   return (
-    <AppShell title="Activity" width="wide" className="gap-5">
+    <AppShell title="Activity" width="wide" className="max-w-2xl gap-5">
       <div role="tablist" aria-label="Filter activity" className="flex gap-1.5">
         {FILTERS.map(option => {
           const active = filter === option.id
@@ -91,7 +90,7 @@ export default function ActivityPage () {
             <p className="font-heading text-lg font-bold">Nothing here yet</p>
             <p className="mt-1.5 text-sm text-muted-foreground">
               {filter === 'all'
-                ? 'Add an expense and it shows up here.'
+                ? 'Split something and it shows up here.'
                 : 'Nothing of this kind has happened yet.'}
             </p>
           </div>
@@ -106,6 +105,7 @@ export default function ActivityPage () {
             <ul className="divide-y divide-border">
               {day.items.map(item => {
                 const { icon: Icon, disc } = KINDS[item.kind]
+                const href = item.settldId ? `/settlds/${item.settldId}` : `/people/${item.personId}`
 
                 return (
                   <li key={item.id} className="flex items-center gap-3 px-3 py-3">
@@ -114,17 +114,14 @@ export default function ActivityPage () {
                     </span>
 
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold">{item.title}</span>
+                      <Link
+                        href={href}
+                        className="block truncate text-sm font-semibold transition-colors hover:text-credit focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                      >
+                        {item.title}
+                      </Link>
                       <span className="mt-0.5 block truncate text-xs font-semibold text-muted-foreground">
-                        <Link
-                          href={`/groups/${item.groupId}`}
-                          className="transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-                        >
-                          {item.groupName}
-                        </Link>
-                        {' · '}{timeLabel(item.at)}
-                        {/* On a phone the row is too narrow for a column of its own, so the
-                            status rides along here instead of squeezing the sentence. */}
+                        {timeLabel(item.at)}
                         {item.status && (
                           <span className={cn('sm:hidden', STATUS[item.status])}>
                             {' · '}{item.status}

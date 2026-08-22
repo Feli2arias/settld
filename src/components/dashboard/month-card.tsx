@@ -35,8 +35,8 @@ export function MonthCard ({ month }: { month: MonthStats }) {
       <div className="grid gap-4 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-border sm:[&>*]:px-3.5 sm:[&>*:first-child]:pl-0 sm:[&>*:last-child]:pr-0">
         <Stat
           icon={Receipt}
-          value={String(month.expenses)}
-          label={month.expenses === 1 ? 'expense' : 'expenses'}
+          value={String(month.settlds)}
+          label={month.settlds === 1 ? 'settld' : 'settlds'}
           disc="bg-secondary text-foreground"
         />
         <Stat

@@ -27,8 +27,8 @@ import { useSession } from '@/lib/client/use-session'
  */
 
 const STEPS = [
-  { n: '1', text: 'You create the group\nand add the expense.' },
-  { n: '2', text: 'Settld works out\nthe split.' },
+  { n: '1', text: 'You put in what\nyou paid for.' },
+  { n: '2', text: 'Settld works out\nwho owes what.' },
   { n: '3', text: 'Everyone pays.\nDone.' }
 ]
 
@@ -64,8 +64,8 @@ const DIFFERENTIATORS = [
     desc: 'Your wallet lives on your device. We only store your public address.'
   },
   {
-    title: 'Smart crossing.',
-    desc: 'If 4 people have 4 crossing expenses, the app resolves it with 3 payments, not 12.'
+    title: 'One number per person.',
+    desc: 'Debts running both ways cancel out. If you owe them and they owe you, all that is left is the difference.'
   }
 ]
 

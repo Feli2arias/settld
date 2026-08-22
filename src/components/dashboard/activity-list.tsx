@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowDownLeft, ArrowUpRight, ArrowLeftRight, Plus } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, Plus } from 'lucide-react'
 import { Panel, PanelHead } from '@/components/dashboard/panel'
 import { formatWhen } from '@/lib/split/dashboard'
 import { cn } from '@/lib/utils'
@@ -15,10 +15,9 @@ import type { ActivityItem } from '@/lib/split/dashboard'
 //   flow of the sentence so a long description can truncate
 
 const KINDS = {
-  expense: { icon: Plus, disc: 'bg-secondary text-muted-foreground' },
+  settld: { icon: Plus, disc: 'bg-secondary text-muted-foreground' },
   received: { icon: ArrowDownLeft, disc: 'bg-credit-surface text-credit' },
-  sent: { icon: ArrowUpRight, disc: 'bg-debit-surface text-debit' },
-  other: { icon: ArrowLeftRight, disc: 'bg-secondary text-muted-foreground' }
+  sent: { icon: ArrowUpRight, disc: 'bg-debit-surface text-debit' }
 } as const
 
 const STATUS = {
@@ -46,7 +45,7 @@ export function RecentActivity ({ items }: { items: ActivityItem[] }) {
                 return (
                   <li key={item.id}>
                     <Link
-                      href={`/groups/${item.groupId}`}
+                      href={item.settldId ? `/settlds/${item.settldId}` : `/people/${item.personId}`}
                       className="flex items-center gap-3 rounded-2xl px-2 py-3 transition-colors hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                     >
                       <span aria-hidden className={cn('flex size-9 shrink-0 items-center justify-center rounded-full', disc)}>

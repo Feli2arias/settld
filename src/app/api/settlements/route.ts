@@ -13,7 +13,6 @@ export const POST = (request: NextRequest) => handle(async () => {
   const body = await request.json()
 
   return createSettlement({
-    groupId: requireString(body.groupId, 'the group'),
     from: requireString(body.from, 'who is paying'),
     to: requireString(body.to, 'who they are paying'),
     amountCents: requirePositiveCents(body.amountCents, 'the amount'),

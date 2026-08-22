@@ -2,9 +2,9 @@
 
 **Split expenses. Settle instantly.** — Aleph Hackathon 2026, WDK track.
 
-Shared-expense apps tell you who owes you. Settld gets you paid: it works out the group's
-debts and clears them with a real USD₮ transfer from a self-custodial wallet built with
-[Tether's Wallet Development Kit](https://docs.wdk.tether.io).
+Shared-expense apps tell you who owes you. Settld gets you paid: it works out what people
+owe each other and clears it with a real USD₮ transfer from a self-custodial wallet built
+with [Tether's Wallet Development Kit](https://docs.wdk.tether.io).
 
 > Settld decides **who pays whom**. WDK makes the payment **actually happen**.
 
@@ -60,22 +60,22 @@ npm run build --prefix split       # production build
 
 ## Demo script
 
-There's one story: Daniel pays for dinner, Felipe ends up owing, Felipe settles, and the
+There's one story: Felipe pays for dinner, Daniel ends up owing, Daniel settles, and the
 money actually moves.
 
-1. **Daniel** creates his account. Underneath, WDK generates a seed on the device and
-   derives his wallet. Daniel never sees a seed phrase or knows he has one.
-2. Daniel taps **Add money** → **Test funds** and $50 shows up.
-3. He creates the **Aleph Hackathon** group and adds **@felipe**.
-4. He enters the expense **Dinner, $20**, split between the two. Settld works out **$10 each**.
-5. **Felipe** opens the group and sees **"You owe $10.00"**.
-6. He taps **Settle up** → the preview shows him who he's paying, how much, what the
-   network costs and what he'll have left. Nothing has gone out yet.
-7. **Confirm and pay** → WDK transfers 10 USD₮ from Felipe's wallet to Daniel's.
-8. The **receipt with the hash** appears, linked to Sepolia Etherscan.
-9. The group updates: Felipe **✓ settled**, and Daniel's balance goes up.
+1. **Felipe** creates his account. Underneath, WDK generates a seed on the device and
+   derives his wallet. Felipe never sees a seed phrase or knows he has one.
+2. He taps **Add money** → **Test funds** and $50 shows up.
+3. He taps **New settld**: *Dinner at Sikwa*, **$20**, split with **@daniel**. Settld works
+   out **$10 each** and shows it while he types.
+4. **Daniel** opens the app and sees **"You owe Felipe $10.00"**.
+5. He taps through to Felipe → **Settle up** → the preview shows who he's paying, how much,
+   what the network costs and what he'll have left. Nothing has gone out yet.
+6. **Confirm and pay** → WDK transfers 10 USD₮ from Daniel's wallet to Felipe's.
+7. The **receipt with the hash** appears, linked to Sepolia Etherscan.
+8. Both dashboards update: Daniel is clear, Felipe's balance goes up.
 
-The moment that matters to judges is step 8. It's a real transaction, verifiable on a
+The moment that matters to judges is step 7. It's a real transaction, verifiable on a
 public explorer, fired from an app that never said the word "blockchain".
 
 ---
@@ -89,10 +89,10 @@ Settld UI  ────────────────┐
    │                       │
    ▼                       ▼
 Settld logic              WDK
-users, groups             self-custodial wallet
-expenses, splitting       address and balance
-who owes whom             payment preview
-net settlement            USD₮ transfer
+users, settlds            self-custodial wallet
+splitting the amount      address and balance
+netting per person        payment preview
+who owes whom             USD₮ transfer
 payment status            receipt
    │                       │
    └──────────┬────────────┘
@@ -102,9 +102,9 @@ payment status            receipt
 
 | Folder | What's in it |
 |---|---|
-| `src/lib/split/` | The brain: net balances, minimum settlement and everything the dashboard adds up. Pure functions, with tests. |
+| `src/lib/split/` | The brain: who owes whom, and everything the screens add up. Pure functions, with tests. |
 | `src/lib/wdk/` | Everything that touches the blockchain: wallet, amounts, receipts, network config. |
-| `src/lib/store/` | Persistence and input validation. `backend.ts` picks where to store. |
+| `src/lib/store/` | Persistence, input validation and the migration off groups. `backend.ts` picks where to store. |
 | `src/lib/client/` | Session, local seed and the API client. |
 | `src/app/` | Screens and API routes. |
 
@@ -114,16 +114,12 @@ It isn't one screen stretched: they're two different layouts sharing the same co
 
 | | mobile (<768) | tablet (768–1023) | desktop (≥1024) |
 |---|---|---|---|
-| Navigation | bottom tab bar on the four main screens, a top bar with a back button everywhere else | same | fixed sidebar: where to go, the groups, and you |
+| Navigation | bottom tab bar on the four main screens, a top bar with a back button everywhere else | same | fixed sidebar: where to go, and you |
 | Width | a single 28rem column, built for the thumb | 42rem–48rem | up to 72rem, left-aligned next to the sidebar |
 | Landing | headline and buttons stacked | same | headline left, a look at the product right |
-| Dashboard | one stack of cards; the group status rides with the member count | three figures across, then the stack | same as tablet until 1280, where it opens into two columns: groups and activity left, the group that needs you and the month right |
-| Group | everything in one column | same | two columns: summary and debts left, expenses right |
+| Dashboard | one stack of cards | three figures across, then the stack | same as tablet until 1280, where it opens into two columns: the people either side of your balance left, your settlds and the month right |
 | Forms | full screen, button at the bottom | same | vertically centred card |
 
-The trick that avoids duplicating the group markup is `display: contents`: on mobile the
-column containers disappear and everything falls into a single column; from `lg` up they
-become flex and build the two columns.
 
 ### The four screens
 
@@ -133,7 +129,7 @@ rail on a desktop. Each one answers a different question, which is why each one 
 | | Answers |
 |---|---|
 | **Dashboard** | What's still open, and what do I do about it |
-| **Groups** | Which group do I have to chase — who's in it, what went through it, who's short |
+| **Settlds** | What have I split, with whom, and for how much |
 | **Activity** | Did that payment actually go through, and when |
 | **Settings** | Who am I, how do people pay me, and how do I get back in if I lose this device |
 
@@ -143,22 +139,51 @@ where somebody goes to check that the money really moved, and the receipt is the
 Adding money stays a dialog rather than becoming a fifth screen — you come back to whatever
 you were doing, and half of it happens inside somebody else's checkout.
 
+### There are no groups
+
+A settld is one thing somebody paid for, split between some people. That's the whole model.
+There is no folder above it: a dinner is not a container you file expenses into, it *is* the
+expense. Whoever paid owns it and is the only one who can edit or delete it — enforced in
+the store, not in the button.
+
+The arithmetic that follows from this is **pairwise**, and that is the decision worth
+defending. With groups, everybody in a group saw the same expenses, so "who pays whom"
+could be optimised across the whole group and everyone agreed on the answer. Without
+groups there is no shared set: somebody you split a dinner with is in other settlds you
+cannot see. Netting globally would mean computing their balance from half the facts and
+telling you to pay a third party on the strength of it — and they would see a different
+number on their screen.
+
+So a debt only ever exists between two people, and both of them can see every settld that
+produced it. Debts running both ways cancel: if you owe them $18 and they owe you $22.50,
+what is left is one row saying $4.50, and one payment clears it.
+
+Deleting a settld leaves the payments alone. Money that moved on a public blockchain did
+move, and deleting the reason for it doesn't undo it — what the arithmetic does with that
+is show the payer owing it back, which is the truth.
+
 ### The dashboard
 
-Every other screen looks at one thing: a group, an expense, a payment. The dashboard is the
+Every other screen looks at one thing: a settld, a person, a payment. The dashboard is the
 only one that answers the question you actually open the app with — what's still open, and
-what do I do about it. It leads with three figures (owed to you, owed by you, what you can
-spend), then puts the group that needs you next to everything else.
+what do I do about it. It leads with three figures (what you can spend, what you owe, what
+you're owed), then puts the people either side of your balance next to what produced it.
 
-Nothing on it is decorative. The three figures, the group rows, the activity feed, the
-member table and the month's totals are all derived from the same groups the app already
-loaded, by `src/lib/split/dashboard.ts` — pure functions over integers, which is where the
-arithmetic is tested. The only number that doesn't come from there is the balance, which
-comes from the blockchain.
+Nothing on it is decorative. Every figure is derived from your ledger by
+`src/lib/split/dashboard.ts` — pure functions over integers, which is where the arithmetic
+is tested. The only number that doesn't come from there is the balance, which comes from
+the blockchain.
 
-Two things the design deliberately does not have: a reminder button, because Settld can't
-send anyone a message, and group photos, because we don't store any — a group gets a tinted
-square with its initials instead.
+One thing the design deliberately does not have: a reminder button, because Settld can't
+send anyone a message.
+
+### Opening a database from before
+
+Groups used to exist, and there is real data written that way. `src/lib/store/migrate.ts`
+runs on every read: the folders are dropped and what was inside them stands on its own,
+same amount, same payer, same people. Payments keep working because they were always
+between two people — the group they were filed under never affected who owed what. The
+first write after that stores the new shape, and the old fields are gone for good.
 
 ### How you add money
 
@@ -220,8 +245,8 @@ signup: that would ruin the moment of walking in.
 
 Details that matter:
 
-- The vault never travels alongside the rest of the user. `/api/users/lookup` and the group
-  detail strip it from the response; it's served only through `/api/users/vault`, at sign-in.
+- The vault never travels alongside the rest of the user. `/api/users/lookup` and the ledger
+  strip it from the response; it's served only through `/api/users/vault`, at sign-in.
 - AES-GCM verifies integrity, so a wrong password or a tampered bundle fail instead of
   returning garbage.
 - **Known limit**: anyone can request a user's vault and try passwords against it offline.
@@ -256,9 +281,9 @@ Works end to end, verified on-chain:
 - [x] Signing in with username and password (the wallet is encrypted with it, on the device)
 - [x] Recovery phrase as the fallback, and signing out
 - [x] Real address and balance
-- [x] Groups and members by `@username`
-- [x] Expenses split evenly
-- [x] Working out who owes whom + minimum settlement
+- [x] Settlds: what you paid for, split between people found by `@username`
+- [x] Editing and deleting your own settlds
+- [x] Working out who owes whom, netted per person
 - [x] Payment preview with network cost and resulting balance
 - [x] Explicit user confirmation
 - [x] Real USD₮ transfer via WDK

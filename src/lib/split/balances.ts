@@ -1,12 +1,20 @@
 /**
- * Settld's brain: from a group's expenses, works out who owes whom and what the smallest
- * set of transfers is that leaves everyone at zero.
+ * Settld's brain: from a pile of settlds, works out who owes whom.
  *
  * Everything here is a pure function over integers. No blockchain, no network, no state:
  * Settld decides WHO pays WHOM, and only then does WDK execute those payments.
+ *
+ * The arithmetic is **pairwise**, and that is a decision worth defending. When there were
+ * groups, everyone in a group saw the same expenses, so a global "who pays whom" could be
+ * optimised across the whole group and everybody agreed on the answer. Without groups
+ * there is no such shared set: somebody you split a dinner with is in other settlds you
+ * cannot see. Netting globally would mean computing their balance from half the facts and
+ * telling you to pay a third party on the strength of it — and they would see a different
+ * number on their screen. So a debt only ever exists between two people, and both of them
+ * can see every settld that produced it.
  */
 
-import type { Expense, Payment, Settlement } from './types'
+import type { Debt, Settld, Settlement } from './types'
 
 /**
  * Splits an amount evenly without losing or inventing cents.
@@ -21,103 +29,135 @@ export function splitEqually (amountCents: number, participants: number): number
   return Array.from({ length: participants }, (_, i) => base + (i < remainder ? 1 : 0))
 }
 
+/** What each participant's share of one settld comes to, keyed by person. */
+export function sharesOf (settld: Settld): Record<string, number> {
+  const shares = splitEqually(settld.amountCents, settld.splitBetween.length)
+
+  return Object.fromEntries(settld.splitBetween.map((userId, i) => [userId, shares[i]]))
+}
+
 /**
- * Each person's net balance, in cents.
- * Positive = they are owed money. Negative = they owe money. The total always sums to zero.
+ * What one person owes another across everything between them, in cents.
+ * Positive means `otherId` owes `userId`. Negative means the other way around.
  *
  * Only settlements confirmed on the blockchain count: while a transfer is pending or has
  * failed, the debt is still alive.
  */
-export function computeNetBalances (expenses: Expense[], settlements: Settlement[]): Record<string, number> {
-  const balances: Record<string, number> = {}
-  const add = (userId: string, cents: number) => {
-    balances[userId] = (balances[userId] ?? 0) + cents
-  }
+export function balanceBetween (
+  settlds: Settld[],
+  settlements: Settlement[],
+  userId: string,
+  otherId: string
+): number {
+  let cents = 0
 
-  for (const expense of expenses) {
-    add(expense.paidBy, expense.amountCents)
+  for (const settld of settlds) {
+    // A settld only says something about this pair if it involves both of them.
+    const shares = sharesOf(settld)
+    const theirs = shares[otherId] ?? 0
+    const yours = shares[userId] ?? 0
 
-    const shares = splitEqually(expense.amountCents, expense.splitBetween.length)
-    expense.splitBetween.forEach((userId, i) => add(userId, -shares[i]))
+    if (settld.paidBy === userId && theirs > 0 && otherId !== userId) cents += theirs
+    if (settld.paidBy === otherId && yours > 0 && otherId !== userId) cents -= yours
   }
 
   for (const settlement of settlements) {
     if (settlement.status !== 'confirmed') continue
-    add(settlement.from, settlement.amountCents)
-    add(settlement.to, -settlement.amountCents)
+
+    if (settlement.from === otherId && settlement.to === userId) cents -= settlement.amountCents
+    if (settlement.from === userId && settlement.to === otherId) cents += settlement.amountCents
   }
 
-  return balances
+  return cents
+}
+
+/** Everyone this person shares a settld with, whoever paid. */
+export function counterpartiesOf (settlds: Settld[], settlements: Settlement[], userId: string): string[] {
+  const people = new Set<string>()
+
+  for (const settld of settlds) {
+    const involved = settld.splitBetween.includes(userId) || settld.paidBy === userId
+    if (!involved) continue
+
+    for (const participant of [...settld.splitBetween, settld.paidBy]) {
+      if (participant !== userId) people.add(participant)
+    }
+  }
+
+  for (const settlement of settlements) {
+    if (settlement.from === userId) people.add(settlement.to)
+    if (settlement.to === userId) people.add(settlement.from)
+  }
+
+  return [...people].sort()
 }
 
 /**
- * Reduces the net balances to the minimum set of transfers that settles the group.
- *
- * It's the classic greedy "biggest debtor pays biggest creditor": it pairs the largest
- * debtor with the largest creditor until one of them hits zero. Every step clears at
- * least one person, so it never needs more than N-1 payments.
+ * Every open debt this person has, in either direction, biggest first.
+ * Anyone who is square with them is left out — there is nothing to say about them.
  */
-export function whoOwesWho (expenses: Expense[], settlements: Settlement[]): Payment[] {
-  const balances = computeNetBalances(expenses, settlements)
-
-  // Sorted by amount — largest absolute value first — with ties broken alphabetically
-  // by id, so the same group always produces the same plan.
-  type Entry = [string, number]
-  const entries = Object.entries(balances)
-
-  const creditors = entries
-    .filter(([, v]) => v > 0)
-    .sort((a: Entry, b: Entry) => b[1] - a[1] || a[0].localeCompare(b[0]))
-
-  const debtors = entries
-    .filter(([, v]) => v < 0)
-    .sort((a: Entry, b: Entry) => a[1] - b[1] || a[0].localeCompare(b[0]))
-
-  const payments: Payment[] = []
-  let c = 0
-  let d = 0
-
-  while (c < creditors.length && d < debtors.length) {
-    const [creditorId, credit] = creditors[c]
-    const [debtorId, debt] = debtors[d]
-
-    const amountCents = Math.min(credit, -debt)
-    if (amountCents > 0) payments.push({ from: debtorId, to: creditorId, amountCents })
-
-    creditors[c] = [creditorId, credit - amountCents]
-    debtors[d] = [debtorId, debt + amountCents]
-
-    if (creditors[c][1] === 0) c++
-    if (debtors[d][1] === 0) d++
-  }
-
-  return payments
+export function debtsOf (settlds: Settld[], settlements: Settlement[], userId: string): Debt[] {
+  return counterpartiesOf(settlds, settlements, userId)
+    .map(otherId => ({ userId: otherId, netCents: balanceBetween(settlds, settlements, userId, otherId) }))
+    .filter(debt => debt.netCents !== 0)
+    .sort((a, b) => Math.abs(b.netCents) - Math.abs(a.netCents) || a.userId.localeCompare(b.userId))
 }
 
-export interface SettlementPlan {
-  /** The user's balance in cents: positive if they are owed, negative if they owe. */
-  netCents: number
-  /** Transfers the user has to make from their own wallet. */
-  owes: Payment[]
-  /** Transfers other people have to make to them. */
-  owed: Payment[]
+export interface Standing {
+  /** Everything owed to you, added up. */
+  owedToYouCents: number
+  /** Everything you owe, added up, as a positive number. */
+  youOweCents: number
+  /** Open debts, biggest first, in both directions. */
+  debts: Debt[]
   isSettled: boolean
 }
 
-/**
- * The plan seen through one person's eyes. This is what feeds the settle-up screen.
- *
- * Important: each user only ever confirms transfers leaving THEIR wallet. Settld never
- * executes a payment on somebody else's behalf.
- */
-export function settlementPlan (expenses: Expense[], settlements: Settlement[], userId: string): SettlementPlan {
-  const netCents = computeNetBalances(expenses, settlements)[userId] ?? 0
-  const payments = whoOwesWho(expenses, settlements)
+/** Where this person stands with everybody. This is what feeds the dashboard. */
+export function standingOf (settlds: Settld[], settlements: Settlement[], userId: string): Standing {
+  const debts = debtsOf(settlds, settlements, userId)
 
   return {
-    netCents,
-    owes: payments.filter(p => p.from === userId),
-    owed: payments.filter(p => p.to === userId),
-    isSettled: netCents === 0
+    owedToYouCents: debts.filter(d => d.netCents > 0).reduce((sum, d) => sum + d.netCents, 0),
+    youOweCents: debts.filter(d => d.netCents < 0).reduce((sum, d) => sum - d.netCents, 0),
+    debts,
+    isSettled: debts.length === 0
   }
+}
+
+/** Which settlds a person is part of at all — theirs to see, and nobody else's. */
+export const settldsOf = (settlds: Settld[], userId: string): Settld[] =>
+  settlds.filter(settld => settld.paidBy === userId || settld.splitBetween.includes(userId))
+
+export type ParticipantStatus = 'paid' | 'settled' | 'owes'
+
+export interface Participant {
+  userId: string
+  shareCents: number
+  status: ParticipantStatus
+}
+
+/**
+ * How one settld stands, person by person.
+ *
+ * "Settled" here means settled **with the payer**: whether somebody has cleared their
+ * balance with the person who put the money down. It is not per-settld, because payments
+ * are not per-settld — you pay a person, not an invoice.
+ */
+export function participantsOf (settld: Settld, settlements: Settlement[], allSettlds: Settld[]): Participant[] {
+  const shares = sharesOf(settld)
+
+  return settld.splitBetween.map(userId => {
+    if (userId === settld.paidBy) {
+      return { userId, shareCents: shares[userId] ?? 0, status: 'paid' as const }
+    }
+
+    const owed = balanceBetween(allSettlds, settlements, settld.paidBy, userId)
+
+    return {
+      userId,
+      shareCents: shares[userId] ?? 0,
+      status: owed > 0 ? ('owes' as const) : ('settled' as const)
+    }
+  })
 }

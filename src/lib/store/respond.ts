@@ -4,7 +4,7 @@
  */
 
 import { NextResponse } from 'next/server'
-import { UsernameTakenError } from './db'
+import { NotFoundError, NotYoursError, UsernameTakenError } from './db'
 import { ValidationError } from './validate'
 
 export interface ApiResponse<T> {
@@ -25,6 +25,8 @@ export async function handle<T> (fn: () => Promise<T>): Promise<NextResponse> {
   } catch (error) {
     if (error instanceof ValidationError) return fail(error.message, 400)
     if (error instanceof UsernameTakenError) return fail(error.message, 409)
+    if (error instanceof NotFoundError) return fail(error.message, 404)
+    if (error instanceof NotYoursError) return fail(error.message, 403)
 
     console.error('[api]', error)
     return fail('Something went wrong. Try again.', 500)

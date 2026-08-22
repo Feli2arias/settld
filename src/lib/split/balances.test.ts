@@ -1,18 +1,25 @@
 import { describe, expect, it } from 'vitest'
-import type { Expense, Settlement } from './types'
-import { computeNetBalances, settlementPlan, splitEqually, whoOwesWho } from './balances'
+import type { Settld, Settlement } from './types'
+import {
+  balanceBetween,
+  counterpartiesOf,
+  debtsOf,
+  participantsOf,
+  settldsOf,
+  sharesOf,
+  splitEqually,
+  standingOf
+} from './balances'
 
-const expense = (over: Partial<Expense> & Pick<Expense, 'amountCents' | 'paidBy' | 'splitBetween'>): Expense => ({
-  id: 'e1',
-  groupId: 'g1',
-  description: 'test',
+const settld = (over: Partial<Settld> & Pick<Settld, 'amountCents' | 'paidBy' | 'splitBetween'>): Settld => ({
+  id: 's1',
+  description: 'Dinner',
   createdAt: '2026-08-22T00:00:00Z',
   ...over
 })
 
-const settlement = (from: string, to: string, amountCents: number, status: Settlement['status'] = 'confirmed'): Settlement => ({
-  id: `s-${from}-${to}`,
-  groupId: 'g1',
+const paid = (from: string, to: string, amountCents: number, status: Settlement['status'] = 'confirmed'): Settlement => ({
+  id: `p-${from}-${to}-${amountCents}`,
   from,
   to,
   amountCents,
@@ -36,100 +43,136 @@ describe('splitEqually', () => {
   })
 })
 
-describe('computeNetBalances', () => {
-  it('credits whoever paid and debits every participant', () => {
-    // Daniel pays a $120 dinner for 4. Each one owes $30.
-    const balances = computeNetBalances(
-      [expense({ amountCents: 12000, paidBy: 'daniel', splitBetween: ['daniel', 'felipe', 'sofia', 'andres'] })],
-      []
-    )
-    expect(balances).toEqual({ daniel: 9000, felipe: -3000, sofia: -3000, andres: -3000 })
-  })
-
-  it('always sums to zero: what one owes, another is owed', () => {
-    const balances = computeNetBalances(
-      [
-        expense({ id: 'a', amountCents: 40000, paidBy: 'daniel', splitBetween: ['daniel', 'felipe', 'sofia', 'andres'] }),
-        expense({ id: 'b', amountCents: 12000, paidBy: 'felipe', splitBetween: ['daniel', 'felipe', 'sofia', 'andres'] }),
-        expense({ id: 'c', amountCents: 1000, paidBy: 'sofia', splitBetween: ['daniel', 'sofia'] })
-      ],
-      []
-    )
-    const total = Object.values(balances).reduce((a, b) => a + b, 0)
-    expect(total).toBe(0)
-  })
-
-  it('a confirmed payment clears the debt', () => {
-    const expenses = [expense({ amountCents: 2000, paidBy: 'daniel', splitBetween: ['daniel', 'felipe'] })]
-    expect(computeNetBalances(expenses, [])).toEqual({ daniel: 1000, felipe: -1000 })
-    expect(computeNetBalances(expenses, [settlement('felipe', 'daniel', 1000)])).toEqual({ daniel: 0, felipe: 0 })
-  })
-
-  it('ignores payments not yet confirmed on the blockchain', () => {
-    const expenses = [expense({ amountCents: 2000, paidBy: 'daniel', splitBetween: ['daniel', 'felipe'] })]
-    const pending = [settlement('felipe', 'daniel', 1000, 'pending')]
-    const failed = [settlement('felipe', 'daniel', 1000, 'failed')]
-    expect(computeNetBalances(expenses, pending)).toEqual({ daniel: 1000, felipe: -1000 })
-    expect(computeNetBalances(expenses, failed)).toEqual({ daniel: 1000, felipe: -1000 })
+describe('sharesOf', () => {
+  it('gives every participant their slice, payer included', () => {
+    expect(sharesOf(settld({ amountCents: 9000, paidBy: 'ana', splitBetween: ['ana', 'ben', 'cai'] })))
+      .toEqual({ ana: 3000, ben: 3000, cai: 3000 })
   })
 })
 
-describe('whoOwesWho', () => {
-  it('with a single expense, each participant owes their share to whoever paid', () => {
-    const payments = whoOwesWho(
-      [expense({ amountCents: 12000, paidBy: 'daniel', splitBetween: ['daniel', 'felipe', 'sofia', 'andres'] })],
-      []
-    )
-    expect(payments).toEqual([
-      { from: 'andres', to: 'daniel', amountCents: 3000 },
-      { from: 'felipe', to: 'daniel', amountCents: 3000 },
-      { from: 'sofia', to: 'daniel', amountCents: 3000 }
+describe('balanceBetween', () => {
+  const dinner = settld({ amountCents: 9000, paidBy: 'ana', splitBetween: ['ana', 'ben', 'cai'] })
+
+  it('counts what the other person owes you for what you paid', () => {
+    expect(balanceBetween([dinner], [], 'ana', 'ben')).toBe(3000)
+  })
+
+  it('is exactly the opposite from the other side', () => {
+    expect(balanceBetween([dinner], [], 'ben', 'ana')).toBe(-3000)
+  })
+
+  it('says nothing about two people who only share a payer', () => {
+    expect(balanceBetween([dinner], [], 'ben', 'cai')).toBe(0)
+  })
+
+  it('nets debts running in both directions into one number', () => {
+    const taxi = settld({ id: 's2', amountCents: 2000, paidBy: 'ben', splitBetween: ['ana', 'ben'] })
+    // Ben owes Ana 3000 for dinner, Ana owes Ben 1000 for the taxi.
+    expect(balanceBetween([dinner, taxi], [], 'ana', 'ben')).toBe(2000)
+  })
+
+  it('clears the debt once the transfer is confirmed', () => {
+    expect(balanceBetween([dinner], [paid('ben', 'ana', 3000)], 'ana', 'ben')).toBe(0)
+  })
+
+  it('keeps the debt alive while the transfer is only pending', () => {
+    expect(balanceBetween([dinner], [paid('ben', 'ana', 3000, 'pending')], 'ana', 'ben')).toBe(3000)
+  })
+
+  it('shows an overpayment as a debt the other way, rather than hiding it', () => {
+    expect(balanceBetween([dinner], [paid('ben', 'ana', 5000)], 'ana', 'ben')).toBe(-2000)
+  })
+
+  it('ignores a settld the payer left themselves out of, for the people not in it', () => {
+    const gift = settld({ id: 's3', amountCents: 6000, paidBy: 'ana', splitBetween: ['ben', 'cai'] })
+    expect(balanceBetween([gift], [], 'ana', 'ben')).toBe(3000)
+    expect(balanceBetween([gift], [], 'ana', 'ana')).toBe(0)
+  })
+})
+
+describe('counterpartiesOf', () => {
+  it('finds everyone you share a settld with, however you are involved', () => {
+    const dinner = settld({ amountCents: 9000, paidBy: 'ana', splitBetween: ['ana', 'ben', 'cai'] })
+    expect(counterpartiesOf([dinner], [], 'ana')).toEqual(['ben', 'cai'])
+    expect(counterpartiesOf([dinner], [], 'ben')).toEqual(['ana', 'cai'])
+  })
+
+  it('leaves out the settlds you have nothing to do with', () => {
+    const theirs = settld({ amountCents: 9000, paidBy: 'ben', splitBetween: ['ben', 'cai'] })
+    expect(counterpartiesOf([theirs], [], 'ana')).toEqual([])
+  })
+
+  it('remembers somebody you have only ever paid', () => {
+    expect(counterpartiesOf([], [paid('ana', 'zoe', 500)], 'ana')).toEqual(['zoe'])
+  })
+})
+
+describe('debtsOf and standingOf', () => {
+  const dinner = settld({ amountCents: 9000, paidBy: 'ana', splitBetween: ['ana', 'ben', 'cai'] })
+  const taxi = settld({ id: 's2', amountCents: 6000, paidBy: 'dan', splitBetween: ['ana', 'dan'] })
+
+  it('lists both directions, biggest first, breaking ties the same way every time', () => {
+    expect(debtsOf([dinner, taxi], [], 'ana')).toEqual([
+      { userId: 'ben', netCents: 3000 },
+      { userId: 'cai', netCents: 3000 },
+      { userId: 'dan', netCents: -3000 }
     ])
   })
 
-  it('returns nothing when the group is already settled', () => {
-    expect(whoOwesWho([], [])).toEqual([])
+  it('puts a bigger debt above a smaller one, whichever way it runs', () => {
+    const big = settld({ id: 's3', amountCents: 40000, paidBy: 'zoe', splitBetween: ['ana', 'zoe'] })
+    expect(debtsOf([dinner, big], [], 'ana')[0]).toEqual({ userId: 'zoe', netCents: -20000 })
   })
 
-  it('minimises the number of transfers', () => {
-    // The example from the spec: 4 expenses, 4 people, settled with 3 payments.
-    const expenses = [
-      expense({ id: 'a', amountCents: 40000, paidBy: 'daniel', splitBetween: ['daniel', 'felipe', 'sofia', 'andres'] }),
-      expense({ id: 'b', amountCents: 12000, paidBy: 'felipe', splitBetween: ['daniel', 'felipe', 'sofia', 'andres'] }),
-      expense({ id: 'c', amountCents: 4000, paidBy: 'daniel', splitBetween: ['daniel', 'felipe', 'sofia', 'andres'] }),
-      expense({ id: 'd', amountCents: 8000, paidBy: 'sofia', splitBetween: ['daniel', 'felipe', 'sofia', 'andres'] })
-    ]
-    const payments = whoOwesWho(expenses, [])
-    expect(payments).toHaveLength(3)
-
-    // And the result leaves everyone at zero.
-    const after = computeNetBalances(expenses, payments.map((p, i) => settlement(p.from, p.to, p.amountCents)).map((s, i) => ({ ...s, id: `s${i}` })))
-    expect(Object.values(after).every(v => v === 0)).toBe(true)
+  it('drops anybody you are square with', () => {
+    const debts = debtsOf([dinner], [paid('ben', 'ana', 3000)], 'ana')
+    expect(debts.map(d => d.userId)).toEqual(['cai'])
   })
 
-  it('is deterministic: same input, same order of payments', () => {
-    const expenses = [
-      expense({ id: 'a', amountCents: 30000, paidBy: 'daniel', splitBetween: ['daniel', 'felipe', 'sofia'] }),
-      expense({ id: 'b', amountCents: 9000, paidBy: 'sofia', splitBetween: ['daniel', 'felipe', 'sofia'] })
-    ]
-    expect(whoOwesWho(expenses, [])).toEqual(whoOwesWho(expenses, []))
+  it('adds up both directions without letting them cancel out', () => {
+    const standing = standingOf([dinner, taxi], [], 'ana')
+
+    expect(standing.owedToYouCents).toBe(6000)
+    expect(standing.youOweCents).toBe(3000)
+    expect(standing.isSettled).toBe(false)
+  })
+
+  it('knows when there is nothing left open', () => {
+    expect(standingOf([], [], 'ana')).toMatchObject({ owedToYouCents: 0, youOweCents: 0, isSettled: true })
   })
 })
 
-describe('settlementPlan', () => {
-  it('separates what the user has to pay from what they are owed', () => {
-    const expenses = [expense({ amountCents: 12000, paidBy: 'daniel', splitBetween: ['daniel', 'felipe', 'sofia', 'andres'] })]
-    const plan = settlementPlan(expenses, [], 'felipe')
+describe('settldsOf', () => {
+  it('keeps the ones you paid for and the ones you are split into', () => {
+    const yours = settld({ amountCents: 100, paidBy: 'ana', splitBetween: ['ana'] })
+    const shared = settld({ id: 's2', amountCents: 100, paidBy: 'ben', splitBetween: ['ana', 'ben'] })
+    const theirs = settld({ id: 's3', amountCents: 100, paidBy: 'ben', splitBetween: ['ben', 'cai'] })
 
-    expect(plan.netCents).toBe(-3000)
-    expect(plan.owes).toEqual([{ from: 'felipe', to: 'daniel', amountCents: 3000 }])
-    expect(plan.owed).toEqual([])
-    expect(plan.isSettled).toBe(false)
+    expect(settldsOf([yours, shared, theirs], 'ana').map(s => s.id)).toEqual(['s1', 's2'])
+  })
+})
+
+describe('participantsOf', () => {
+  const dinner = settld({ amountCents: 9000, paidBy: 'ana', splitBetween: ['ana', 'ben', 'cai'] })
+
+  it('marks the payer as paid and everybody else by what they still owe', () => {
+    expect(participantsOf(dinner, [], [dinner])).toEqual([
+      { userId: 'ana', shareCents: 3000, status: 'paid' },
+      { userId: 'ben', shareCents: 3000, status: 'owes' },
+      { userId: 'cai', shareCents: 3000, status: 'owes' }
+    ])
   })
 
-  it('marks anyone who neither owes nor is owed as settled', () => {
-    const plan = settlementPlan([], [], 'felipe')
-    expect(plan.isSettled).toBe(true)
-    expect(plan.netCents).toBe(0)
+  it('marks somebody settled once they are square with the payer', () => {
+    const participants = participantsOf(dinner, [paid('ben', 'ana', 3000)], [dinner])
+    expect(participants.find(p => p.userId === 'ben')?.status).toBe('settled')
+  })
+
+  it('judges by the whole balance with the payer, not by this settld alone', () => {
+    // Ben owes Ana 3000 for dinner, but Ana owes Ben 5000 for the flat: Ben is not short.
+    const flat = settld({ id: 's2', amountCents: 10000, paidBy: 'ben', splitBetween: ['ana', 'ben'] })
+    const participants = participantsOf(dinner, [], [dinner, flat])
+
+    expect(participants.find(p => p.userId === 'ben')?.status).toBe('settled')
   })
 })

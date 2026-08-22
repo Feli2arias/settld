@@ -7,7 +7,6 @@ import { AddMoneyDialog } from '@/components/add-money-dialog'
 import { DESTINATIONS, MobileTabs, isTopLevel } from '@/components/nav'
 import { PersonAvatar } from '@/components/person'
 import { Button } from '@/components/ui/button'
-import { useGroups } from '@/lib/client/use-groups'
 import { useSession } from '@/lib/client/use-session'
 import { cn } from '@/lib/utils'
 import type { LucideIcon } from 'lucide-react'
@@ -36,7 +35,6 @@ const CURRENT = 'bg-accent text-accent-foreground'
 
 export default function AppLayout ({ children }: LayoutProps<'/'>) {
   const { session } = useSession()
-  const groups = useGroups(session?.userId)
   const pathname = usePathname()
 
   return (
@@ -75,39 +73,14 @@ export default function AppLayout ({ children }: LayoutProps<'/'>) {
           )}
         </nav>
 
-        <nav aria-label="Your groups" className="mt-8 flex-1 overflow-y-auto">
-          <p className="eyebrow mb-3 px-3.5">Groups</p>
-
-          <ul className="space-y-1">
-            {groups?.map(group => {
-              const href = `/groups/${group.id}`
-              const current = pathname.startsWith(href)
-
-              return (
-                <li key={group.id}>
-                  <Link
-                    href={href}
-                    aria-current={current ? 'page' : undefined}
-                    className={cn(ROW, 'truncate', current ? CURRENT : IDLE)}
-                  >
-                    {group.name}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-
-          {groups?.length === 0 && (
-            <p className="px-3.5 text-sm text-muted-foreground">None yet.</p>
-          )}
-
-          <Button size="pill" variant="secondary" className="mt-4 w-full" asChild>
-            <Link href="/groups/new">
+        <div className="mt-8 flex-1">
+          <Button size="pill" className="w-full" asChild>
+            <Link href="/settlds/new">
               <Plus aria-hidden />
-              New group
+              New settld
             </Link>
           </Button>
-        </nav>
+        </div>
 
         {session && (
           <div className="mt-6 border-t border-border pt-6">

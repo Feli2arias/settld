@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Clock, Home, Settings, Users } from 'lucide-react'
+import { Clock, Home, Receipt, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { LucideIcon } from 'lucide-react'
 
@@ -17,7 +17,7 @@ import type { LucideIcon } from 'lucide-react'
 /** The four places you can always get back to. Everything else hangs off one of them. */
 export const DESTINATIONS: Array<{ href: string, icon: LucideIcon, label: string }> = [
   { href: '/home', icon: Home, label: 'Dashboard' },
-  { href: '/groups', icon: Users, label: 'Groups' },
+  { href: '/settlds', icon: Receipt, label: 'Settlds' },
   { href: '/activity', icon: Clock, label: 'Activity' },
   { href: '/settings', icon: Settings, label: 'Settings' }
 ]

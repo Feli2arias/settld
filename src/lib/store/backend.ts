@@ -14,16 +14,33 @@
 
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import type { Expense, Group, Settlement, StoredUser } from '@/lib/split/types'
+import type { Settld, Settlement, StoredUser } from '@/lib/split/types'
+import { migrateSettlds, migrateSettlements } from './migrate'
 
 export interface Database {
   users: StoredUser[]
-  groups: Group[]
-  expenses: Expense[]
+  settlds: Settld[]
   settlements: Settlement[]
 }
 
-export const EMPTY: Database = { users: [], groups: [], expenses: [], settlements: [] }
+export const EMPTY: Database = { users: [], settlds: [], settlements: [] }
+
+/**
+ * Reads a stored database of any shape we have ever written.
+ *
+ * Data from the version with groups comes through here on every read, so nobody has to
+ * remember to run a migration. The first write after that stores the new shape and the
+ * old fields are gone for good.
+ */
+function adopt (raw: unknown): Database {
+  const stored = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<string, unknown>
+
+  return {
+    users: Array.isArray(stored.users) ? (stored.users as StoredUser[]) : [],
+    settlds: migrateSettlds(stored),
+    settlements: migrateSettlements(stored)
+  }
+}
 
 const KEY = 'split:db'
 const FILE = path.join(process.cwd(), '.data', 'split.json')
@@ -66,12 +83,11 @@ async function redisCommand (command: unknown[]): Promise<unknown> {
 export async function loadDatabase (): Promise<Database> {
   if (redisCredentials()) {
     const raw = await redisCommand(['GET', KEY])
-    if (typeof raw !== 'string') return { ...EMPTY }
-    return { ...EMPTY, ...JSON.parse(raw) }
+    return typeof raw === 'string' ? adopt(JSON.parse(raw)) : { ...EMPTY }
   }
 
   try {
-    return { ...EMPTY, ...JSON.parse(await fs.readFile(FILE, 'utf8')) }
+    return adopt(JSON.parse(await fs.readFile(FILE, 'utf8')))
   } catch {
     return { ...EMPTY }
   }

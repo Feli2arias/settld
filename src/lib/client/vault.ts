@@ -6,6 +6,8 @@
  * this has to go through a user passphrase and WebCrypto encryption before touching disk.
  */
 
+import type { User } from '@/lib/split/types'
+
 const SEED_KEY = 'split.seed'
 const SESSION_KEY = 'split.session'
 
@@ -15,6 +17,19 @@ export interface StoredSession {
   name: string
   walletAddress: string
 }
+
+/**
+ * The session as a User.
+ *
+ * The session calls the id `userId` because that is what it means on a device that holds
+ * exactly one; everything else in the app calls it `id`. This is the one place they meet.
+ */
+export const sessionUser = (session: StoredSession): User => ({
+  id: session.userId,
+  name: session.name,
+  username: session.username,
+  walletAddress: session.walletAddress
+})
 
 const isBrowser = () => typeof window !== 'undefined'
 
