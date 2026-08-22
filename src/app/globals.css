@@ -1,26 +1,192 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SPLIT — sistema de diseño
+
+   Dirección: "recibo editorial". Lienzo de papel cálido, tinta casi negra,
+   y los montos como protagonistas absolutos: números enormes, tabulares y
+   apretados, como los de un ticket impreso.
+
+   La decisión de color más importante es no parecer una app de crypto. Nada de
+   fondo negro con gradiente violeta. Papel, tinta, y un verde lima de señal que
+   sólo aparece cuando hay una acción que tomar o una deuda que se saldó.
+
+   Ningún valor de color, espaciado, radio o duración se escribe suelto en un
+   componente: todo sale de acá.
+   ───────────────────────────────────────────────────────────────────────────── */
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-display);
   --font-mono: var(--font-geist-mono);
+
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  /* Semántica de plata: la única distinción que le importa al usuario. */
+  --color-credit: var(--credit);
+  --color-credit-surface: var(--credit-surface);
+  --color-debit: var(--debit);
+  --color-debit-surface: var(--debit-surface);
+
+  --radius-sm: calc(var(--radius) * 0.4);
+  --radius-md: calc(var(--radius) * 0.7);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.5);
+  --radius-2xl: calc(var(--radius) * 2);
+  --radius-3xl: calc(var(--radius) * 2.6);
+  --radius-4xl: calc(var(--radius) * 3.2);
+
+  /* Motion. Enter con ease-out, exit con ease-in. Nunca lineal. */
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-emphasis: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --radius: 1rem;
+
+  --background: oklch(0.972 0.014 88);       /* papel cálido */
+  --foreground: oklch(0.19 0.008 110);       /* tinta */
+
+  --card: oklch(1 0.004 88);
+  --card-foreground: var(--foreground);
+  --popover: oklch(1 0.004 88);
+  --popover-foreground: var(--foreground);
+
+  /* Lima de señal sobre verde profundo: el único color que grita. */
+  --primary: oklch(0.885 0.196 128);
+  --primary-foreground: oklch(0.31 0.09 145);
+
+  --secondary: oklch(0.93 0.016 92);
+  --secondary-foreground: var(--foreground);
+
+  --muted: oklch(0.938 0.014 92);
+  --muted-foreground: oklch(0.505 0.014 106);
+
+  --accent: oklch(0.945 0.048 138);
+  --accent-foreground: oklch(0.31 0.09 145);
+
+  --destructive: oklch(0.545 0.176 32);
+
+  --border: oklch(0.19 0.008 110 / 12%);
+  --input: oklch(0.19 0.008 110 / 16%);
+  --ring: oklch(0.62 0.13 140);
+
+  --credit: oklch(0.46 0.115 150);           /* te deben */
+  --credit-surface: oklch(0.948 0.046 140);
+  --debit: oklch(0.525 0.168 33);            /* debés */
+  --debit-surface: oklch(0.952 0.032 45);
+}
+
+.dark {
+  --background: oklch(0.185 0.01 108);
+  --foreground: oklch(0.955 0.012 90);
+
+  --card: oklch(0.235 0.012 108);
+  --card-foreground: var(--foreground);
+  --popover: oklch(0.235 0.012 108);
+  --popover-foreground: var(--foreground);
+
+  --primary: oklch(0.885 0.196 128);
+  --primary-foreground: oklch(0.26 0.08 145);
+
+  --secondary: oklch(0.285 0.012 108);
+  --secondary-foreground: var(--foreground);
+
+  --muted: oklch(0.285 0.012 108);
+  --muted-foreground: oklch(0.712 0.014 100);
+
+  --accent: oklch(0.325 0.05 140);
+  --accent-foreground: oklch(0.92 0.14 130);
+
+  --destructive: oklch(0.685 0.175 30);
+
+  --border: oklch(0.955 0.012 90 / 14%);
+  --input: oklch(0.955 0.012 90 / 18%);
+  --ring: oklch(0.72 0.15 135);
+
+  --credit: oklch(0.82 0.16 140);
+  --credit-surface: oklch(0.32 0.055 145);
+  --debit: oklch(0.735 0.145 38);
+  --debit-surface: oklch(0.315 0.06 40);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "calt" 1, "ss01" 1;
+  }
+
+  html {
+    @apply font-sans;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Los montos son el contenido, no la decoración: siempre tabulares para que
+     las columnas de números queden alineadas y no "bailen" al actualizarse. */
+  .amount {
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 0.88;
+  }
+
+  /* Micro-etiqueta de sección, en versalitas espaciadas. Es lo que le da el
+     aire de recibo impreso. */
+  .eyebrow {
+    @apply text-[0.6875rem] font-bold uppercase tracking-[0.16em] text-muted-foreground;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  /* Textura sutil de papel. Se apaga sola en dark porque ahí no hay papel. */
+  .paper {
+    background-image: radial-gradient(
+      oklch(0.19 0.008 110 / 3.5%) 0.5px,
+      transparent 0.5px
+    );
+    background-size: 4px 4px;
+  }
+
+  .dark .paper {
+    background-image: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
