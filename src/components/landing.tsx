@@ -1,22 +1,24 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Check, Hash, Lock, ShieldCheck, Zap } from 'lucide-react'
-import { motion } from 'motion/react'
 import { useSession } from '@/lib/client/use-session'
 
 /**
  * The landing page.
  *
- * Built as a collage of things left on a table — a receipt, a strip of tape, a rubber
- * stamp — because the product is about a real bill between real friends, and a flat
- * gradient hero would say nothing. None of it is an image: it is gradients, masks and
- * SVG, so it stays sharp at any size and costs nothing to load.
+ * A collage of things left on a table — the receipt, a strip of tape, a rubber stamp —
+ * because the product is about a real bill between real friends, and a flat gradient
+ * hero would say nothing.
+ *
+ * Nothing here animates. The page is a poster: it should be fully there the instant it
+ * loads, not assemble itself in front of the reader.
  *
  * Unlike the rest of the app, this page has fixed colours: it doesn't follow the system
- * theme. A brand page looks the same always, like a poster.
+ * theme. A brand page looks the same always.
  *
  * Anyone who already has an account is sent straight to the home screen — nobody should
  * see a marketing page twice. But the markup still renders on the server, and isn't
@@ -34,7 +36,7 @@ const TRUST = [
   {
     icon: Lock,
     title: 'Your money is yours',
-    desc: "We never custody your balance. Your wallet lives on your device."
+    desc: 'We never custody your balance. Your wallet lives on your device.'
   },
   {
     icon: Zap,
@@ -67,21 +69,9 @@ const DIFFERENTIATORS = [
   }
 ]
 
-/** The people on the sample receipt. This is a mockup: none of it comes from the database. */
-const SAMPLE_SPLIT = [
-  { initial: 'M', handle: '@mateo', tint: 'bg-[#f7c9cd]', state: 'settled' as const },
-  { initial: 'J', handle: '@julian', tint: 'bg-[#cfc4ee]', state: 'owes' as const },
-  { initial: 'A', handle: '@ana', tint: 'bg-[#bcd8f0]', state: 'settled' as const },
-  { initial: 'Y', handle: '@you', tint: 'bg-lime', state: 'paid' as const }
-]
-
-/** Bar widths for the fake barcode, in a deliberately irregular rhythm. */
-const BARCODE = [3, 1, 1, 4, 1, 2, 1, 1, 3, 2, 1, 4, 1, 1, 2, 3, 1, 1, 4, 2, 1, 1, 3, 1, 2, 4, 1, 1, 2, 1, 3, 2]
-
 export function Landing () {
   const { status } = useSession()
   const router = useRouter()
-  const [reminded, setReminded] = useState(false)
 
   useEffect(() => {
     if (status === 'ready') router.replace('/home')
@@ -110,24 +100,15 @@ export function Landing () {
       <section className="relative">
         {/* The dark half the collage sits against. It bleeds off the right edge so the
             receipt can straddle the boundary between paper and ink. */}
-        <div
-          aria-hidden
-          className="absolute inset-y-0 right-0 hidden w-[42%] bg-ink lg:block"
-        />
+        <div aria-hidden className="absolute inset-y-0 right-0 hidden w-[42%] bg-ink lg:block" />
 
-        <div className="relative mx-auto grid w-full max-w-[1400px] grid-cols-1 items-center gap-16 px-6 pt-6 pb-16 md:px-12 lg:grid-cols-12 lg:gap-10 lg:pb-24">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="lg:col-span-7"
-          >
+        <div className="relative mx-auto grid w-full max-w-[1400px] grid-cols-1 items-center gap-14 px-6 pt-6 pb-16 md:px-12 lg:grid-cols-12 lg:gap-10 lg:pb-24">
+          <div className="lg:col-span-7">
             <h1 className="display text-6xl md:text-[84px] lg:text-[92px] xl:text-[104px]">
               Split expenses.
               <br />
-              {/* Inline, not inline-block: that's what lets the highlighter redraw on
-                  each line the headline wraps to, the way a real marker would. */}
-              <span className="marker">Settle instantly.</span>
+              <Highlight rotate="-1.6deg">Settle</Highlight>{' '}
+              <Highlight rotate="1.1deg">instantly.</Highlight>
             </h1>
 
             <p className="mt-8 max-w-xl text-lg leading-relaxed font-medium opacity-75 md:text-xl">
@@ -172,20 +153,23 @@ export function Landing () {
                 I already have an account
               </Link>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
-            className="relative flex justify-center lg:col-span-5 lg:justify-end"
-          >
-            <div className="relative w-full max-w-[400px] pb-24 lg:pb-28">
-              <Receipt />
+          <div className="relative flex justify-center lg:col-span-5 lg:justify-end">
+            <div className="relative w-full max-w-[420px] pb-16 lg:max-w-[480px] lg:pb-20">
+              <Image
+                src="/receipt.png"
+                alt="A receipt for dinner split between four friends: two have settled, two still owe."
+                width={1086}
+                height={1448}
+                priority
+                sizes="(max-width: 1024px) 90vw, 480px"
+                className="h-auto w-full drop-shadow-[0_28px_50px_rgba(22,21,15,0.35)]"
+              />
               <TapeStrip />
               <Stamp />
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -214,13 +198,7 @@ export function Landing () {
         </div>
       </section>
 
-      <motion.section
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-100px' }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
-        className="mx-auto flex max-w-[1100px] flex-col items-center px-6 py-28 text-center md:px-12 md:py-40"
-      >
+      <section className="mx-auto flex max-w-[1100px] flex-col items-center px-6 py-28 text-center md:px-12 md:py-40">
         <h2 className="display mb-12 text-4xl text-ink md:text-6xl lg:text-7xl">
           &ldquo;Don&rsquo;t teach people how to use crypto. Build products where they
           don&rsquo;t need to know they&rsquo;re using it.&rdquo;
@@ -232,7 +210,7 @@ export function Landing () {
         >
           Create free account
         </Link>
-      </motion.section>
+      </section>
 
       <footer className="flex flex-col items-center justify-between gap-4 border-t border-ink/10 px-6 py-8 text-sm font-bold tracking-widest uppercase opacity-40 sm:flex-row md:px-12">
         <span>© 2026 Settld</span>
@@ -245,130 +223,22 @@ export function Landing () {
 }
 
 /**
- * The receipt. It's the whole pitch in one object: a real bill, split, with two people
- * already settled and one who still owes.
+ * One pass of a highlighter, tilted.
+ *
+ * It wraps a single word on purpose. A rotated block behind a whole phrase would cover
+ * every line the phrase wraps to and turn into one big slab; word by word, each stroke
+ * stays the size of its word at any screen width — and the slightly different angles
+ * read as a hand, not a shape tool.
  */
-function Receipt () {
+function Highlight ({ children, rotate }: { children: React.ReactNode, rotate: string }) {
   return (
-    <div
-      aria-hidden
-      className="receipt-paper receipt-torn relative -rotate-2 px-7 pt-8 pb-10 shadow-[0_28px_60px_-18px_rgba(22,21,15,0.35)]"
-    >
-      <CircledLabel />
-
-      <div className="mt-5 flex items-start justify-between gap-4">
-        <div>
-          <p className="display text-2xl text-ink">Dinner at Osaka</p>
-          <p className="mt-1 text-[10px] font-bold tracking-[0.18em] text-ink/40 uppercase">
-            Buenos Aires, AR
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="text-[10px] font-bold tracking-[0.18em] text-ink/40 uppercase">Total</p>
-          <p className="display text-3xl text-ink tabular-nums">$120.00</p>
-        </div>
-      </div>
-
-      <div className="mt-5 border-t border-dashed border-ink/25 pt-3">
-        <div className="flex items-baseline justify-between">
-          <p className="text-[10px] font-bold tracking-[0.18em] text-ink/50 uppercase">
-            Split between 4
-          </p>
-          <p className="text-sm font-semibold text-ink/70 tabular-nums">$30.00 each</p>
-        </div>
-      </div>
-
-      <ul className="mt-2">
-        {SAMPLE_SPLIT.map(person => (
-          <li
-            key={person.handle}
-            className="flex items-center gap-3 border-b border-dashed border-ink/20 py-3 last:border-b-0"
-          >
-            <span
-              className={`flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-ink/70 ${person.tint}`}
-            >
-              {person.initial}
-            </span>
-            <span className="flex-1 text-sm font-semibold text-ink">{person.handle}</span>
-
-            {person.state === 'paid'
-              ? (
-                  <>
-                    <span className="text-sm font-bold text-brand-green tabular-nums">+$90.00</span>
-                    <StatusPill tone="paid">Paid</StatusPill>
-                  </>
-                )
-              : (
-                  <>
-                    <span className="text-sm font-semibold text-ink/80 tabular-nums">$30.00</span>
-                    <StatusPill tone={person.state}>
-                      {person.state === 'settled' ? '✓ Settled' : 'Owes'}
-                    </StatusPill>
-                  </>
-                )}
-          </li>
-        ))}
-      </ul>
-
-      <div className="mt-7 flex items-end justify-between gap-5">
-        <p className="max-w-[9rem] -rotate-3 font-hand text-2xl leading-tight text-ink/85">
-          No one had to chase anyone.
-        </p>
-
-        <div className="text-right">
-          <div className="flex h-11 items-end justify-end gap-[2px]">
-            {BARCODE.map((width, index) => (
-              <span
-                key={index}
-                className="block h-full bg-ink"
-                style={{ width: `${width}px`, opacity: index % 5 === 0 ? 0.75 : 1 }}
-              />
-            ))}
-          </div>
-          <p className="mt-1.5 text-[10px] font-bold tracking-[0.35em] text-ink/50 uppercase">
-            Settld
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/** The hand-circled note at the top of the receipt. */
-function CircledLabel () {
-  return (
-    <span className="relative inline-block px-4 py-1">
-      <svg
+    <span className="relative inline-block">
+      <span
         aria-hidden
-        viewBox="0 0 160 46"
-        preserveAspectRatio="none"
-        className="absolute inset-0 size-full overflow-visible text-ink/70"
-      >
-        <path
-          d="M120 8C96 1 58 0 30 7 8 13 2 26 12 34c12 10 60 13 94 7 26-5 38-15 30-23-5-5-18-8-32-9"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-        />
-      </svg>
-      <span className="relative text-[11px] font-bold tracking-[0.22em] text-ink uppercase">
-        Friday night
-      </span>
-    </span>
-  )
-}
-
-function StatusPill ({ tone, children }: { tone: 'settled' | 'owes' | 'paid', children: React.ReactNode }) {
-  const styles = {
-    settled: 'bg-brand-green/12 text-brand-green',
-    paid: 'bg-brand-green/12 text-brand-green',
-    owes: 'bg-brand-red/12 text-brand-red'
-  }[tone]
-
-  return (
-    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold whitespace-nowrap ${styles}`}>
-      {children}
+        className="absolute inset-x-[-0.1em] top-[0.16em] bottom-[0.06em] bg-lime"
+        style={{ transform: `rotate(${rotate})`, borderRadius: '0.5rem 0.9rem 0.4rem 0.8rem' }}
+      />
+      <span className="relative">{children}</span>
     </span>
   )
 }
@@ -378,10 +248,10 @@ function TapeStrip () {
   return (
     <div
       aria-hidden
-      className="tape absolute right-[-4%] bottom-6 rotate-[-4deg] bg-lime px-7 py-4 shadow-[0_10px_24px_-8px_rgba(22,21,15,0.35)] sm:right-[-8%]"
+      className="tape absolute right-[-4%] bottom-2 rotate-[-4deg] bg-lime px-7 py-4 shadow-[0_10px_24px_-8px_rgba(22,21,15,0.35)] sm:right-[-8%]"
     >
       <p className="font-hand text-2xl leading-none font-bold text-lime-ink">
-        @julian paid $30
+        Felipe paid $36.70
       </p>
       <p className="mt-1.5 flex items-center gap-1.5 text-[10px] font-bold tracking-[0.22em] text-lime-ink/70 uppercase">
         <Check className="size-3" strokeWidth={3} aria-hidden />
@@ -397,7 +267,7 @@ function Stamp () {
     <svg
       aria-hidden
       viewBox="0 0 120 120"
-      className="absolute bottom-1 left-[-26%] hidden size-32 -rotate-12 text-paper/35 xl:block"
+      className="absolute bottom-4 left-[-24%] hidden size-32 -rotate-12 text-paper/35 xl:block"
     >
       <defs>
         <path id="stamp-arc" d="M60 60 m-44 0 a44 44 0 1 1 88 0 a44 44 0 1 1 -88 0" fill="none" />
