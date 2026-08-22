@@ -3,9 +3,9 @@ import { Bricolage_Grotesque, Manrope } from 'next/font/google'
 import './globals.css'
 
 /**
- * Bricolage Grotesque para los montos y titulares: tiene la densidad y el carácter
- * de un tipo de imprenta, que es exactamente el tono de "recibo" que buscamos.
- * Manrope para el resto de la interfaz, en peso 500 como default.
+ * Bricolage Grotesque for amounts and headlines: it has the density and character of
+ * letterpress type, which is exactly the "receipt" tone we're after. Manrope for the
+ * rest of the interface, at weight 500 by default.
  */
 const display = Bricolage_Grotesque({
   variable: '--font-display',
@@ -21,7 +21,7 @@ const body = Manrope({
 
 export const metadata: Metadata = {
   title: 'Settld — Split expenses. Settle instantly.',
-  description: 'Dividí gastos con tus amigos y saldá las deudas de verdad, en USD₮.'
+  description: 'Split expenses with friends and actually settle up, in USD₮.'
 }
 
 export const viewport: Viewport = {
@@ -32,8 +32,8 @@ export const viewport: Viewport = {
 }
 
 /**
- * Aplica el tema del sistema antes del primer pintado.
- * Sin esto, quien tiene el celular en modo oscuro ve un flash de papel blanco.
+ * Applies the system theme before the first paint.
+ * Without this, anyone with their phone in dark mode gets a flash of white paper.
  */
 const THEME_SCRIPT = `try{
   var dark = matchMedia('(prefers-color-scheme: dark)');
@@ -44,7 +44,7 @@ const THEME_SCRIPT = `try{
 
 export default function RootLayout ({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="es" className={`${display.variable} ${body.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang="en" className={`${display.variable} ${body.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>

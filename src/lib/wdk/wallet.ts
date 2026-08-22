@@ -1,11 +1,11 @@
 /**
- * La capa de wallet de Settld, construida sobre WDK.
+ * Settld's wallet layer, built on WDK.
  *
- * Todo esto corre en el navegador: la seed se genera en el dispositivo del usuario y
- * nunca se manda al servidor. Settld guarda la address pública (para que otros puedan
- * pagarle) y nada más.
+ * All of this runs in the browser: the seed is generated on the user's device and never
+ * sent to the server. Settld stores the public address (so others can pay them) and
+ * nothing else.
  *
- * Ninguna función de este módulo debe filtrar la seed ni el keyPair al resto de la app.
+ * No function in this module may leak the seed or the keyPair to the rest of the app.
  */
 
 import type { TransferResult } from '@tetherto/wdk-wallet-evm'
@@ -16,7 +16,7 @@ import { currentBlock, waitForUserOp } from './receipt'
 type WalletManager = InstanceType<typeof import('@tetherto/wdk-wallet-evm-erc-4337').default>
 type Account = Awaited<ReturnType<WalletManager['getAccount']>>
 
-/** WDK depende de APIs de Node que sólo shimeamos para el browser, así que se importa en runtime. */
+/** WDK depends on Node APIs we only shim for the browser, so it is imported at runtime. */
 async function loadWdk () {
   const [{ default: WDK }, { default: WalletManagerEvmErc4337 }] = await Promise.all([
     import('@tetherto/wdk'),
@@ -30,12 +30,12 @@ export async function generateSeedPhrase (): Promise<string> {
   return WDK.getRandomSeedPhrase()
 }
 
-/** Cantidades de palabras que admite BIP-39. WDK genera de 12. */
+/** Word counts BIP-39 accepts. WDK generates 12. */
 const VALID_WORD_COUNTS = [12, 15, 18, 21, 24]
 
 /**
- * Limpia una frase tipeada a mano: espacios de más, saltos de línea y mayúsculas
- * que mete el teclado del celular. Devuelve null si ni siquiera tiene forma de frase.
+ * Cleans up a hand-typed phrase: extra spaces, line breaks and the capitals a phone
+ * keyboard adds. Returns null if it doesn't even have the shape of a phrase.
  */
 export function normalizeSeedPhrase (input: string): string | null {
   const words = input.trim().toLowerCase().split(/\s+/).filter(Boolean)
@@ -43,10 +43,10 @@ export function normalizeSeedPhrase (input: string): string | null {
 }
 
 /**
- * Abre la cuenta de una seed y se la pasa a `fn`, asegurando que las claves se borren
- * de memoria al terminar, pase lo que pase.
+ * Opens the account for a seed and hands it to `fn`, making sure the keys are wiped from
+ * memory when it ends, whatever happens.
  *
- * Es la única puerta de entrada a la wallet: nadie fuera de este módulo toca un account.
+ * It is the only door into the wallet: nobody outside this module touches an account.
  */
 async function withAccount<T> (seedPhrase: string, fn: (account: Account) => Promise<T>): Promise<T> {
   const { WalletManagerEvmErc4337 } = await loadWdk()
@@ -60,17 +60,17 @@ async function withAccount<T> (seedPhrase: string, fn: (account: Account) => Pro
   }
 }
 
-/** Deriva la address de la smart account. Es lo único que Settld publica de una wallet. */
+/** Derives the smart account address. It is the only thing Settld publishes about a wallet. */
 export const deriveAddress = (seedPhrase: string): Promise<string> =>
   withAccount(seedPhrase, account => account.getAddress())
 
-/** Saldo en centavos, listo para mostrar. */
+/** Balance in cents, ready to display. */
 export const getBalanceCents = (seedPhrase: string): Promise<number> =>
   withAccount(seedPhrase, async account =>
     tokenUnitsToCents(await account.getTokenBalance(USDT_ADDRESS))
   )
 
-/** Saldo de cualquier address, sin necesidad de su seed. Para ver el balance de otro. */
+/** Balance of any address, without needing its seed. For seeing someone else's balance. */
 export async function getBalanceCentsOf (address: string): Promise<number> {
   const { WalletAccountReadOnlyEvm } = await import('@tetherto/wdk-wallet-evm')
   const account = new WalletAccountReadOnlyEvm(address, { provider: WDK_CONFIG.provider })
@@ -79,7 +79,7 @@ export async function getBalanceCentsOf (address: string): Promise<number> {
 
 export interface TransferPreview {
   amountCents: number
-  /** Costo estimado de red, en centavos. Se paga en USD₮, no en ETH. */
+  /** Estimated network cost, in cents. Paid in USD₮, not ETH. */
   feeCents: number
   balanceCents: number
   balanceAfterCents: number
@@ -87,8 +87,8 @@ export interface TransferPreview {
 }
 
 /**
- * Simula la transferencia sin ejecutarla. Alimenta la pantalla de preview: el usuario
- * ve exactamente cuánto sale y cómo le queda el saldo antes de confirmar nada.
+ * Simulates the transfer without executing it. This feeds the preview screen: the user
+ * sees exactly what it costs and how their balance ends up before confirming anything.
  */
 export function previewTransfer (seedPhrase: string, recipient: string, amountCents: number): Promise<TransferPreview> {
   return withAccount(seedPhrase, async account => {
@@ -120,17 +120,17 @@ export interface TransferReceipt {
 }
 
 /**
- * Ejecuta la transferencia de verdad y espera la confirmación on-chain.
+ * Actually executes the transfer and waits for on-chain confirmation.
  *
- * Dos detalles que costaron sangre:
+ * Two details that cost blood:
  *
- * 1. `transfer()` devuelve el hash de la UserOperation, que NO es el hash de la
- *    transacción. El link al explorer necesita el segundo, y lo sacamos del evento
- *    que emite el EntryPoint (ver receipt.ts).
- * 2. Una vez que `transfer()` volvió, la plata YA está en camino. A partir de ahí
- *    ningún error puede reportarse como "el pago falló": lo peor que puede pasar es
- *    que todavía no sepamos si llegó. Por eso `onSubmitted` corre antes de esperar,
- *    para que quien llama pueda dejar constancia del pago pase lo que pase después.
+ * 1. `transfer()` returns the UserOperation hash, which is NOT the transaction hash. The
+ *    explorer link needs the second one, and we get it from the event the EntryPoint
+ *    emits (see receipt.ts).
+ * 2. Once `transfer()` has returned, the money is ALREADY on its way. From that point on
+ *    no error may be reported as "the payment failed": the worst that can happen is that
+ *    we don't know yet whether it arrived. That's why `onSubmitted` runs before waiting,
+ *    so the caller can put the payment on record whatever happens next.
  */
 export function sendTransfer (
   seedPhrase: string,
@@ -139,8 +139,8 @@ export function sendTransfer (
   onSubmitted?: (userOpHash: string) => Promise<void> | void
 ): Promise<TransferReceipt> {
   return withAccount(seedPhrase, async account => {
-    // Anotamos el bloque actual antes de enviar, para después buscar el evento
-    // desde acá y no barrer toda la cadena.
+    // We note the current block before sending, so we can then search for the event
+    // from here instead of sweeping the whole chain.
     const fromBlock = await currentBlock().catch(() => 'latest')
 
     const result: TransferResult = await account.transfer({

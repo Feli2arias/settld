@@ -17,20 +17,20 @@ import { type StoredSession, forgetEverything, readSeed } from '@/lib/client/vau
 
 // Contract: AccountDialog
 // Props: session (required), children (el trigger)
-// Variants: la frase de recuperación arranca oculta y se revela a pedido
-// States: default | frase oculta | frase visible | copiado (2s) | cerrando sesión
-// Accessibility: es un Dialog de Radix — foco atrapado, cierra con Escape, título y
-//   descripción anunciados. Los botones de copiar confirman con texto, no sólo con color.
-// Responsive: el contenido se adapta al ancho del diálogo; la frase usa grid de 3
-//   columnas en mobile y 4 desde sm
+// Variants: the recovery phrase starts hidden and is revealed on demand
+// States: default | phrase hidden | phrase visible | copied (2s) | signing out
+// Accessibility: a Radix Dialog — focus trapped, closes on Escape, title and description
+//   announced. The copy buttons confirm with text, not colour alone.
+// Responsive: content adapts to the dialog width; the phrase uses a 3-column grid on
+//   mobile and 4 from sm up
 
 /**
- * La cuenta del usuario, y el único lugar donde aparece la frase de recuperación.
+ * The user's account, and the only place the recovery phrase ever appears.
  *
- * Settld esconde la infraestructura por diseño, pero esconder la frase del todo sería
- * mentirle a la gente: sin ella, borrar el navegador significa perder la plata para
- * siempre. Así que no se la mostramos en la cara al crear la cuenta, pero está acá,
- * a un toque, y es lo que hace posible volver a entrar desde otro dispositivo.
+ * Settld hides the infrastructure by design, but hiding the phrase entirely would be
+ * lying to people: without it, clearing the browser means losing the money forever. So
+ * we don't shove it in their face at signup, but it lives here, one tap away, and it's
+ * what makes signing back in from another device possible.
  */
 export function AccountDialog ({
   session,
@@ -51,8 +51,8 @@ export function AccountDialog ({
       setCopied(what)
       setTimeout(() => setCopied(null), 2000)
     } catch {
-      // Sin permiso de portapapeles no hay nada que hacer: la frase está a la vista
-      // para copiarla a mano.
+      // Without clipboard permission there's nothing to do: the phrase is on screen
+      // to be copied by hand.
     }
   }
 
@@ -77,13 +77,13 @@ export function AccountDialog ({
             </span>
           </DialogTitle>
           <DialogDescription className="sr-only">
-            Tu cuenta, tu frase de recuperación y la opción de cerrar sesión.
+            Your account, your recovery phrase and the option to sign out.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5">
           <div>
-            <p className="eyebrow mb-2">Tu wallet</p>
+            <p className="eyebrow mb-2">Your wallet</p>
             <button
               type="button"
               onClick={() => copy(session.walletAddress, 'address')}
@@ -91,20 +91,20 @@ export function AccountDialog ({
             >
               <span className="min-w-0 flex-1 truncate">{session.walletAddress}</span>
               {copied === 'address'
-                ? <span className="shrink-0 font-sans text-xs font-bold text-credit">copiada</span>
+                ? <span className="shrink-0 font-sans text-xs font-bold text-credit">copied</span>
                 : <Copy className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />}
             </button>
           </div>
 
           <div>
-            <p className="eyebrow mb-2">Frase de recuperación</p>
+            <p className="eyebrow mb-2">Recovery phrase</p>
 
             {!revealed
               ? (
                   <div className="rounded-2xl bg-secondary px-4 py-4">
                     <p className="text-sm text-muted-foreground">
-                      Estas 12 palabras son tu cuenta. Guardalas para poder entrar desde otro
-                      dispositivo — cualquiera que las tenga puede mover tu plata.
+                      These 12 words are your account. Save them so you can sign in from
+                      another device — anyone who has them can move your money.
                     </p>
                     <Button
                       size="pill"
@@ -113,7 +113,7 @@ export function AccountDialog ({
                       onClick={() => setRevealed(true)}
                     >
                       <Eye aria-hidden />
-                      Mostrar
+                      Show
                     </Button>
                   </div>
                 )
@@ -141,20 +141,20 @@ export function AccountDialog ({
                         onClick={() => copy(seedPhrase, 'phrase')}
                       >
                         {copied === 'phrase' ? <Check aria-hidden /> : <Copy aria-hidden />}
-                        {copied === 'phrase' ? 'Copiada' : 'Copiar frase'}
+                        {copied === 'phrase' ? 'Copied' : 'Copy phrase'}
                       </Button>
                     </div>
                   )
                 : (
                     <p className="rounded-2xl bg-debit-surface px-4 py-3 text-sm font-semibold text-debit">
-                      No encontramos tu frase en este dispositivo.
+                      We couldn't find your phrase on this device.
                     </p>
                   )}
           </div>
 
           <Button size="pill" variant="ghost" className="w-full" onClick={handleLogout}>
             <LogOut aria-hidden />
-            Cerrar sesión
+            Sign out
           </Button>
         </div>
       </DialogContent>

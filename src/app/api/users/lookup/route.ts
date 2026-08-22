@@ -4,11 +4,11 @@ import { handle } from '@/lib/store/respond'
 import { ValidationError, requireUsername, requireWalletAddress } from '@/lib/store/validate'
 
 /**
- * Resuelve un usuario por `@usuario` o por wallet address. Devuelve null si no existe.
+ * Resolves a user by `@username` or by wallet address. Returns null if there is none.
  *
- * La búsqueda por address es la que permite volver a entrar a una cuenta: el navegador
- * deriva la address de la frase de recuperación y pregunta acá de quién es. La frase
- * nunca sale del dispositivo.
+ * The address lookup is what makes signing back in possible: the browser derives the
+ * address from the recovery phrase and asks here whose it is. The phrase never leaves
+ * the device.
  */
 export const GET = (request: NextRequest) => handle(async () => {
   const { searchParams } = request.nextUrl
@@ -19,5 +19,5 @@ export const GET = (request: NextRequest) => handle(async () => {
   const username = searchParams.get('username')
   if (username) return findUserByUsername(requireUsername(username))
 
-  throw new ValidationError('Falta el usuario o la address a buscar')
+  throw new ValidationError('Missing the username or address to look up')
 })

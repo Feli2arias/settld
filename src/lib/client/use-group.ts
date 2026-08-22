@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { api } from './api'
 import type { GroupDetail } from '@/lib/store/db'
 
-/** Carga un grupo y expone un `reload` para refrescarlo después de un cambio. */
+/** Loads a group and exposes a `reload` to refresh it after a change. */
 export function useGroup (groupId: string) {
   const [detail, setDetail] = useState<GroupDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -13,7 +13,7 @@ export function useGroup (groupId: string) {
     try {
       setDetail(await api.getGroup(groupId))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No pudimos cargar el grupo')
+      setError(err instanceof Error ? err.message : "We couldn't load the group")
     }
   }, [groupId])
 
@@ -22,11 +22,11 @@ export function useGroup (groupId: string) {
   return { detail, error, reload }
 }
 
-/** Busca a una persona del grupo por id. Devuelve un placeholder si ya no está. */
+/** Finds someone in the group by id. Returns a placeholder if they are gone. */
 export const memberOf = (detail: GroupDetail, userId: string) =>
   detail.members.find(m => m.id === userId) ?? {
     id: userId,
-    name: 'Alguien',
-    username: 'desconocido',
+    name: 'Someone',
+    username: 'unknown',
     walletAddress: ''
   }

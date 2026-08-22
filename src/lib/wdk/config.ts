@@ -1,39 +1,39 @@
 /**
- * Configuración de red de Settld.
+ * Settld's network configuration.
  *
- * Corremos sobre Ethereum Sepolia con USD₮ de prueba, y usamos ERC-4337 con paymaster
- * para que el gas se pague en el mismo USD₮. Consecuencia importante: ningún usuario
- * necesita tener ETH jamás. Crea la cuenta, recibe USD₮, y ya puede pagar.
+ * We run on Ethereum Sepolia with test USD₮, and use ERC-4337 with a paymaster so gas is
+ * paid in that same USD₮. Important consequence: no user ever needs to hold ETH. They
+ * create an account, receive USD₮, and can pay right away.
  */
 
 export const CHAIN_ID = 11155111
 
 /**
- * El RPC que figura en los docs de WDK (sepolia.drpc.org) dejó de servir Sepolia en el
- * plan gratuito, así que usamos publicnode.
+ * The RPC listed in WDK's docs (sepolia.drpc.org) stopped serving Sepolia on the free
+ * plan, so we use publicnode.
  */
 export const RPC_URL = 'https://ethereum-sepolia-rpc.publicnode.com'
 
-/** USD₮ de prueba en Sepolia. 6 decimales. No tiene ningún valor real. */
+/** Test USD₮ on Sepolia. 6 decimals. Worth nothing at all. */
 export const USDT_ADDRESS = '0xd077a400968890eacc75cdc901f0356c943e4fdb'
 export const USDT_DECIMALS = 6
 
 /**
- * Bundler y paymaster de ERC-4337.
+ * ERC-4337 bundler and paymaster.
  *
- * El endpoint público de Pimlico alcanza para desarrollar, pero tiene rate limit y
- * empieza a rechazar consultas justo cuando hay actividad. Para una demo en vivo
- * conviene poner una API key gratuita en NEXT_PUBLIC_BUNDLER_URL.
+ * Pimlico's public endpoint is enough for development, but it is rate limited and starts
+ * refusing queries exactly when there's activity. For a live demo, put a free API key in
+ * NEXT_PUBLIC_BUNDLER_URL.
  */
 const BUNDLER_URL =
   process.env.NEXT_PUBLIC_BUNDLER_URL ?? 'https://public.pimlico.io/v2/11155111/rpc'
 
 /**
- * Techo de fee por transferencia, en unidades de USD₮.
+ * Fee ceiling per transfer, in USD₮ units.
  *
- * La primera transferencia de cada cuenta incluye el deploy de la smart account y sale
- * bastante más cara que las siguientes (medimos ~1.7 USD₮ en Sepolia). Dejamos margen,
- * pero el límite existe: si la red se dispara, WDK aborta en vez de vaciar la wallet.
+ * Each account's first transfer includes deploying the smart account and costs quite a
+ * bit more than the ones after it (we measured ~1.7 USD₮ on Sepolia). We leave headroom,
+ * but the limit exists: if the network spikes, WDK aborts instead of draining the wallet.
  */
 export const TRANSFER_MAX_FEE = 10_000_000 // 10 USD₮
 
@@ -51,18 +51,18 @@ export const WDK_CONFIG = {
 export const explorerTxUrl = (txHash: string) => `https://sepolia.etherscan.io/tx/${txHash}`
 
 /**
- * On-ramp con tarjeta (MoonPay, vía WDK).
+ * Card on-ramp (MoonPay, via WDK).
  *
- * Sin la clave publicable, la opción de comprar con tarjeta no se ofrece: preferimos
- * no mostrarla antes que mostrar un botón que no lleva a ningún lado.
+ * Without the publishable key, the buy-with-card option isn't offered: we would rather
+ * hide it than show a button that leads nowhere.
  */
 export const MOONPAY_API_KEY = process.env.NEXT_PUBLIC_MOONPAY_API_KEY ?? null
 
-/** En sandbox, MoonPay simula la compra entera sin cobrar un peso. */
+/** In sandbox, MoonPay simulates the whole purchase without charging a cent. */
 export const MOONPAY_ENVIRONMENT =
   (process.env.NEXT_PUBLIC_MOONPAY_ENVIRONMENT as 'sandbox' | 'production' | undefined) ?? 'sandbox'
 
-/** Qué se compra. MoonPay lo identifica con su propio código de activo. */
+/** What gets bought. MoonPay identifies it with its own asset code. */
 export const MOONPAY_ASSET = process.env.NEXT_PUBLIC_MOONPAY_ASSET ?? 'usdt'
 
 export { BUNDLER_URL }

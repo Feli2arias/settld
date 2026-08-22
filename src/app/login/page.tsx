@@ -17,14 +17,14 @@ import type { User } from '@/lib/split/types'
 type Mode = 'password' | 'phrase'
 
 /**
- * Volver a entrar a una cuenta, por dos caminos.
+ * Signing back into an account, by two routes.
  *
- * El de todos los días es usuario y contraseña: el navegador se baja la wallet cifrada
- * y la abre acá mismo. La contraseña no viaja a ningún lado y el servidor nunca puede
- * abrir el bulto, así que la cuenta se siente normal sin dejar de ser del usuario.
+ * The everyday one is username and password: the browser downloads the encrypted
+ * wallet and opens it right here. The password never travels anywhere and the server
+ * can never open the bundle, so the account feels normal without ceasing to be theirs.
  *
- * El de emergencia es la frase de recuperación, para cuando la contraseña se olvidó
- * o la cuenta es vieja y no tiene una.
+ * The emergency one is the recovery phrase, for when the password is forgotten or the
+ * account is old enough that it doesn't have one.
  */
 export default function LoginPage () {
   const router = useRouter()
@@ -37,7 +37,7 @@ export default function LoginPage () {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  /** Guarda la sesión y entra. Es el final común de los dos caminos. */
+  /** Saves the session and goes in. It's the shared ending of both routes. */
   function enter (user: User, seedPhrase: string) {
     saveSeed(seedPhrase)
     saveSession({
@@ -62,11 +62,11 @@ export default function LoginPage () {
       const [user, vault] = await Promise.all([api.lookupUser(handle), api.getVault(handle)])
 
       if (!user) {
-        setError(`No encontramos la cuenta @${handle}`)
+        setError(`We couldn't find the account @${handle}`)
         return
       }
       if (!vault) {
-        setError('Esta cuenta se creó antes de que hubiera contraseñas. Entrá con tu frase de recuperación.')
+        setError('This account was created before passwords existed. Sign in with your recovery phrase.')
         return
       }
 
@@ -74,8 +74,8 @@ export default function LoginPage () {
     } catch (err) {
       setError(
         err instanceof WrongPasswordError
-          ? 'Contraseña incorrecta'
-          : err instanceof Error ? err.message : 'No pudimos entrar'
+          ? 'Wrong password'
+          : err instanceof Error ? err.message : "We couldn't sign you in"
       )
     } finally {
       setBusy(false)
@@ -87,7 +87,7 @@ export default function LoginPage () {
 
     const seedPhrase = normalizeSeedPhrase(phrase)
     if (!seedPhrase) {
-      setError('Una frase de recuperación tiene 12 palabras separadas por espacios')
+      setError('A recovery phrase is 12 words separated by spaces')
       return
     }
 
@@ -98,13 +98,13 @@ export default function LoginPage () {
       const user = await api.lookupUserByAddress(await deriveAddress(seedPhrase))
 
       if (!user) {
-        setError('Esa frase es válida, pero no hay ninguna cuenta de Settld asociada')
+        setError("That phrase is valid, but there's no Settld account linked to it")
         return
       }
 
       enter(user, seedPhrase)
     } catch {
-      setError('No pudimos leer esa frase. Fijate que las palabras estén bien escritas.')
+      setError("We couldn't read that phrase. Check that the words are spelled correctly.")
     } finally {
       setBusy(false)
     }
@@ -118,13 +118,13 @@ export default function LoginPage () {
   const wordCount = phrase.trim() ? phrase.trim().split(/\s+/).length : 0
 
   return (
-    <AppShell title="Entrar" backHref="/">
+    <AppShell title="Sign in" backHref="/">
       {mode === 'password'
         ? (
             <form onSubmit={loginWithPassword} className="flex flex-1 flex-col">
               <div className="flex-1 space-y-6 pt-6">
                 <div className="space-y-2.5">
-                  <Label htmlFor="username" className="eyebrow">Usuario</Label>
+                  <Label htmlFor="username" className="eyebrow">Username</Label>
                   <div className="relative">
                     <span
                       aria-hidden
@@ -147,7 +147,7 @@ export default function LoginPage () {
                 </div>
 
                 <div className="space-y-2.5">
-                  <Label htmlFor="password" className="eyebrow">Contraseña</Label>
+                  <Label htmlFor="password" className="eyebrow">Password</Label>
                   <Input
                     id="password"
                     type="password"
@@ -168,7 +168,7 @@ export default function LoginPage () {
               <div className="mt-auto space-y-4 pt-8">
                 <Button type="submit" size="pill-lg" disabled={busy || !username.trim() || !password}>
                   {busy && <Loader2 className="animate-spin" aria-hidden />}
-                  {busy ? 'Abriendo tu cuenta…' : 'Entrar'}
+                  {busy ? 'Opening your account…' : 'Sign in'}
                 </Button>
 
                 <button
@@ -176,16 +176,16 @@ export default function LoginPage () {
                   onClick={() => switchTo('phrase')}
                   className="w-full text-center text-sm font-bold text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                 >
-                  Olvidé mi contraseña
+                  I forgot my password
                 </button>
 
                 <p className="text-center text-sm text-muted-foreground">
-                  ¿No tenés cuenta?{' '}
+                  Don&rsquo;t have an account?{' '}
                   <Link
                     href="/onboarding"
                     className="font-bold text-foreground underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                   >
-                    Creá una
+                    Create one
                   </Link>
                 </p>
               </div>
@@ -194,13 +194,13 @@ export default function LoginPage () {
         : (
             <form onSubmit={loginWithPhrase} className="flex flex-1 flex-col">
               <div className="flex-1 space-y-3 pt-6">
-                <Label htmlFor="phrase" className="eyebrow">Tu frase de recuperación</Label>
+                <Label htmlFor="phrase" className="eyebrow">Your recovery phrase</Label>
 
                 <textarea
                   id="phrase"
                   value={phrase}
                   onChange={event => setPhrase(event.target.value)}
-                  placeholder="las doce palabras que guardaste, separadas por espacios"
+                  placeholder="the twelve words you saved, separated by spaces"
                   rows={4}
                   autoFocus
                   autoCapitalize="none"
@@ -212,8 +212,8 @@ export default function LoginPage () {
 
                 <p id="phrase-hint" className="text-xs text-muted-foreground">
                   {wordCount === 0
-                    ? 'La encontrás en Settld, en la pantalla de inicio, tocando tu nombre.'
-                    : `${wordCount} ${wordCount === 1 ? 'palabra' : 'palabras'}`}
+                    ? 'You can find it in Settld, on the home screen, by tapping your name.'
+                    : `${wordCount} ${wordCount === 1 ? 'word' : 'words'}`}
                 </p>
 
                 {error && (
@@ -226,7 +226,7 @@ export default function LoginPage () {
               <div className="mt-auto space-y-4 pt-8">
                 <Button type="submit" size="pill-lg" disabled={busy || wordCount === 0}>
                   {busy && <Loader2 className="animate-spin" aria-hidden />}
-                  Entrar
+                  Sign in
                 </Button>
 
                 <button
@@ -234,7 +234,7 @@ export default function LoginPage () {
                   onClick={() => switchTo('password')}
                   className="w-full text-center text-sm font-bold text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                 >
-                  Entrar con usuario y contraseña
+                  Sign in with username and password
                 </button>
               </div>
             </form>

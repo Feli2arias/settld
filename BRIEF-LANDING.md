@@ -1,128 +1,145 @@
-# Contexto de Settld para generar la landing
+# Settld brand context
 
-> Copiá todo lo que sigue y pegalo en ChatGPT para generar imágenes de la marca.
+> Copy everything below and paste it into ChatGPT (or any image model) to generate brand
+> imagery — pitch deck slides, social cards, mockups.
 >
-> Ojo: la landing real ya existe y está en producción, así que para que una imagen salga
-> fiel conviene además adjuntar una captura de https://split-zeta-one.vercel.app — la
-> descripción de abajo quedó de cuando la página todavía no estaba construida y difiere
-> en algunos detalles.
+> Note: the real landing page already exists and is in production. For an image to come out
+> faithful, also attach a screenshot of <https://split-zeta-one.vercel.app>. This document
+> describes that page as built.
 
 ---
 
-## El producto
+## The product
 
-Settld es una app de gastos compartidos. Dividís la cena, el Airbnb o el viaje con tus
-amigos, y cuando llega el momento de saldar, **la plata se mueve de verdad** desde la app.
-Las apps tradicionales te dicen quién te debe; Settld hace que te paguen.
+Settld is a shared-expense app. You split dinner, the Airbnb or a trip with your friends,
+and when it's time to settle up, **the money actually moves** from inside the app. Other
+apps tell you who owes you and stop there; Settld gets you paid.
 
-Por debajo cada usuario tiene una wallet self-custodial y los pagos son transferencias
-reales de dólares digitales, pero **el usuario nunca se entera**. No hay una sola pantalla
-que diga "wallet", "token", "blockchain" ni "crypto". Se habla de saldo, cargar plata,
-pagar y saldar, como cualquier app de banco.
+Underneath, every user has a self-custodial wallet and payments are real transfers of
+digital dollars — but **the user never finds out**. Not one screen says "wallet", "token",
+"blockchain" or "crypto". It talks about balance, adding money, paying and settling up,
+like any banking app.
 
-Público: gente común de 20 a 40 años que sale a comer con amigos y se cansó de perseguir
-a los que no pagan. No son técnicos y no les interesa serlo.
+Audience: ordinary people in their twenties and thirties who go out to eat with friends and
+are tired of chasing the ones who don't pay. They aren't technical and have no interest in
+becoming technical.
 
-Frase central: **"Split expenses. Settle instantly."**
-Bajada: "Las apps de gastos te dicen quién te debe. Settld hace que te paguen."
+Core line: **"Split expenses. Settle instantly."**
+Subline: "Other apps tell you who owes you and stop there. Settld calculates and executes
+the payment in USD₮ directly from your wallet."
 
-## Identidad visual
+## Visual identity
 
-La decisión de diseño más importante fue **no parecer una app de crypto**. Nada de fondo
-negro con gradientes violetas ni estética futurista. En vez de eso: papel cálido, tinta
-casi negra, y un verde lima de señal que aparece sólo cuando hay algo para hacer. La
-referencia de tono es Wise, no un exchange.
+The most important design decision was **not looking like a crypto app**. No black
+background with purple gradients, no futuristic aesthetic. Instead: warm paper, near-black
+ink, and a signal lime that only appears when there's something to do. The reference in
+tone is Wise, not an exchange.
 
-**Colores exactos**
+**Exact colours**
 
-| Rol | Hex |
+| Role | Hex |
 |---|---|
-| Fondo, papel cálido | `#faf5eb` |
-| Texto, tinta casi negra | `#141410` |
-| Tarjetas, blanco roto | `#fffffc` |
-| Verde lima, botones y acentos | `#b3f051` |
-| Verde profundo, texto sobre el lima | `#073b0f` |
-| Verde de "te deben" | `#176933` |
-| Fondo suave verde | `#def6d9` |
-| Rojo de "debés" | `#b7381f` |
-| Gris cálido de superficies | `#eeeae0` |
-| Texto secundario | `#65655c` |
+| Background, warm paper | `#faf6ee` |
+| Text, near-black ink | `#16150f` |
+| Cards, pure white | `#ffffff` |
+| Signal lime, buttons and accents | `#c3f04e` |
+| Deep green, text on the lime | `#204c2c` |
+| Green for "settled" | `#2c7248` |
+| Red for "owes" | `#b54a2e` |
 
-**Tipografía**
+**Typography**
 
-- Títulos y montos: **Bricolage Grotesque**, peso 800, tracking muy cerrado (-0.045em),
-  interlineado apretadísimo (0.85–0.88). Los titulares se ven densos y apilados, como un
-  cartel impreso.
-- Texto de interfaz: **Manrope**, peso 500–700.
-- Micro-etiquetas de sección: mayúsculas, 11px, letter-spacing amplio (0.16em), gris —
-  el detalle que le da aire de recibo impreso.
-- Los montos siempre en cifras tabulares y enormes. **El número es el protagonista de
-  cada pantalla**, no la decoración.
+- Headlines and amounts: **Bricolage Grotesque**, weight 800, very tight tracking
+  (-0.04em), extremely tight leading (0.85). Headlines look dense and stacked, like a
+  printed poster.
+- Interface text: **Manrope**, weight 500–600.
+- Section micro-labels: uppercase, 11px, wide letter-spacing, grey — the detail that gives
+  it the printed-receipt feel.
+- Amounts always in tabular figures and huge. **The number is the protagonist of every
+  screen**, not the decoration.
 
-**Formas y textura**
+**Shapes and texture**
 
-- Botones tipo píldora, completamente redondeados, altos (56px), de ancho completo.
-- Tarjetas con esquinas muy redondeadas (24–32px), sin sombras: sólo un borde finito
-  de 1px casi transparente.
-- Una textura sutil de puntitos sobre el fondo, apenas visible, que sugiere papel.
-- Mucho aire. Nada apretado.
+- Fully rounded pill buttons, tall, generous padding.
+- Cards with very round corners (32px) and almost no shadow: a hairline 1px border and, on
+  the hero card only, one soft deep shadow.
+- A subtle dot texture over the background, barely visible, suggesting paper.
+- Lots of air. Nothing cramped.
 
-## La landing como está construida
+## The landing as built
 
-Es mobile-first, pero en desktop cambia de layout: dos columnas.
+Mobile-first, but the layout changes on desktop: two columns.
 
-**Izquierda:**
-- Arriba, en micro-mayúsculas grises: `ALEPH HACKATHON 2026`
-- Titular gigante, apilado en cuatro renglones muy juntos, en negro:
-  `Settld` / `expenses.` / `Settle` / `instantly.`
-  — con la palabra **"Settle" en verde** (`#176933`), el resto en tinta.
-- Bajada en gris: "Las apps de gastos te dicen quién te debe. Settld hace que te paguen."
-- Dos botones: uno lima sólido que dice **Empezar**, y al lado uno fantasma que dice
-  **Ya tengo cuenta**.
-- Letra chica: "Tu wallet se crea en este dispositivo y no sale de acá."
+**Header:** the wordmark `Settld.` on the left, and a black pill button reading **Open App**
+on the right.
 
-**Derecha:** un vistazo al producto, no un mockup de celular genérico. Es una tarjeta
-blanca, redondeada, ligeramente rotada (-1.5°), que muestra un gasto real:
+**Left column:**
+- Giant headline, stacked on two very tight lines, in ink:
+  `Split expenses.` / `Settle instantly.`
+  — with the word **"Settle" in green** (`#2c7248`), the rest in ink.
+- Subline in ink at 80% opacity: "Other apps tell you who owes you and stop there. Settld
+  calculates and executes the payment in USD₮ directly from your wallet."
+- A solid lime pill button reading **Start now** with a right arrow, and beside it, in tiny
+  spaced uppercase grey: "BUILT ON WDK".
+
+**Right column:** a look at the product, not a generic phone mockup. A white card with very
+round corners, slightly rotated in 3D (about -5° on Y, +2° on X) that straightens out on
+hover, showing a real expense:
 
 ```
-Cena                                   $120.00
-Pagó Daniel
-──────────────────────────────────────────────
-● Daniel     $30.00      pagó
-● Felipe     $30.00      ✓ saldado
-● Sofía      $30.00      debe
-● Andrés     $30.00      debe
+DINNER AT OSAKA
+$120.00
+──────────────────────────────────────────
+M  @mateo      $30    ✓ SETTLED
+J  @julian     $30    OWES          ← highlighted on a soft red background
+A  @ana        $30    ✓ SETTLED
+Y  @you (paid)        +$90
+──────────────────────────────────────────
+[         Remind @julian          ]   ← black pill button
 ```
 
-Los nombres llevan avatares circulares con iniciales, cada uno de un color pastel distinto
-(rosa, violeta, celeste, verde). "pagó" y "✓ saldado" en verde; "debe" en rojo.
+The names carry circular avatars with initials. "SETTLED" is green on a pale green chip;
+"OWES" is red. The `@you` row shows `+$90` in green with a lime avatar.
 
-Debajo y apenas rotada al otro lado (+1°), una píldora verde lima con texto verde oscuro:
-**"Felipe pagó $30 · confirmado en la blockchain"**.
+**Differentiators strip:** a full-width white band, four columns divided by hairlines, each
+with a bold headline and a paragraph at 60% opacity:
+- "Real settlement." — We are not a grocery ledger. Others calculate; Settld collects and transfers.
+- "No ETH, ever." — Network fees are paid in USD₮. Nobody needs an absurd second token.
+- "Self-custodial." — Your wallet lives on your device. We only store your public address.
+- "Smart crossing." — If 4 people have 4 crossing expenses, the app resolves it with 3 payments, not 12.
+
+**Closing quote:** centred, huge, in the display typeface:
+"Don't teach people how to use crypto. Build products where they don't need to know they're
+using it." — followed by a big lime pill button reading **Create free account**, with a soft
+lime glow beneath it.
+
+**Footer:** hairline rule, and in small spaced uppercase at 40% opacity: "© 2026 Settld" on
+the left, "# VERIFIABLE RECEIPTS" on the right.
 
 ---
 
-## El pedido para la imagen
+## The image prompt
 
-Generá un mockup de la landing page de Settld, una app de gastos compartidos entre amigos.
-Estilo editorial fintech, cálido y con mucho aire — lo opuesto a una app de crypto.
+Generate a mockup of the landing page for Settld, a shared-expense app for friends.
+Editorial fintech style, warm and full of air — the opposite of a crypto app.
 
-Fondo color papel cálido `#faf5eb`, con una textura de puntitos casi imperceptible.
-Composición de dos columnas en formato desktop 16:9.
+Warm paper background `#faf6ee`, with an almost imperceptible dot texture. Two-column
+composition in a 16:9 desktop format.
 
-A la izquierda: un titular tipográfico enorme y muy denso, en cuatro renglones apilados
-con interlineado apretadísimo, tipo grotesca pesada estilo Bricolage Grotesque en peso 800,
-que dice "Split expenses. Settle instantly." — con la palabra "Settle" en verde `#176933`
-y el resto en negro cálido `#141410`. Arriba del titular, una micro-etiqueta en mayúsculas
-espaciadas grises que dice "ALEPH HACKATHON 2026". Debajo, una bajada corta en gris, y dos
-botones tipo píldora: uno relleno en verde lima `#b3f051` con texto verde oscuro que dice
-"Empezar", y otro fantasma que dice "Ya tengo cuenta".
+On the left: an enormous, very dense typographic headline on two stacked lines with
+extremely tight leading, a heavy grotesque in the style of Bricolage Grotesque at weight
+800, reading "Split expenses. Settle instantly." — with the word "Settle" in green
+`#2c7248` and the rest in warm black `#16150f`. Below it, a short subline in the same ink
+at reduced opacity, and a lime pill button `#c3f04e` with dark green text reading "Start
+now", next to tiny spaced grey uppercase text reading "BUILT ON WDK". Above everything, a
+small wordmark reading "Settld." and a black pill button reading "Open App".
 
-A la derecha: una tarjeta blanca `#fffffc` de esquinas muy redondeadas, sin sombra, apenas
-rotada, mostrando un gasto compartido llamado "Cena" por "$120.00", con cuatro personas
-listadas —cada una con un avatar circular pastel con su inicial y su parte de $30.00— y
-etiquetas de estado en verde y rojo. Debajo, una píldora verde lima ligeramente rotada al
-otro lado con el texto "Felipe pagó $30".
+On the right: a white card with very round corners (32px), one soft deep shadow, slightly
+rotated in 3D, showing a shared expense titled "DINNER AT OSAKA" for "$120.00", with four
+people listed — each with a small circular avatar bearing their initial and their $30
+share — and status chips in green ("SETTLED") and red ("OWES"), with one row highlighted on
+a pale red background. At the bottom of the card, a black pill button reading "Remind
+@julian".
 
-Sin sombras marcadas, sin gradientes, sin degradés violetas, sin estética futurista ni
-elementos de crypto. Limpio, cálido, tipográfico, con mucho espacio en blanco.
+No harsh shadows, no gradients, no purple fades, no futuristic aesthetic and no crypto
+imagery. Clean, warm, typographic, with lots of white space.

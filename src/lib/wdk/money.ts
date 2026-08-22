@@ -1,7 +1,6 @@
 /**
- * Conversiones entre las tres formas en que aparece la plata en Settld:
- * lo que ve el usuario ($30.00), lo que guardamos (3000 centavos) y lo que
- * viaja on-chain (30000000 unidades de USD₮).
+ * Conversions between the three shapes money takes in Settld: what the user sees
+ * ($30.00), what we store (3000 cents) and what travels on-chain (30000000 USD₮ units).
  */
 
 import { TOKEN_UNITS_PER_CENT } from '@/lib/split/types'
@@ -12,7 +11,7 @@ export const centsToTokenUnits = (cents: number): bigint =>
 export const tokenUnitsToCents = (units: bigint): number =>
   Number(units / BigInt(TOKEN_UNITS_PER_CENT))
 
-/** Formatea centavos como "$30.00". Es el único formato que ve el usuario. */
+/** Formats cents as "$30.00". It is the only format the user ever sees. */
 export function formatMoney (cents: number, { sign = false }: { sign?: boolean } = {}): string {
   const abs = Math.abs(cents)
   const formatted = `$${(abs / 100).toFixed(2)}`
@@ -23,7 +22,7 @@ export function formatMoney (cents: number, { sign = false }: { sign?: boolean }
   return formatted
 }
 
-/** Parsea lo que el usuario tipea ("120", "120.50", "$120,50") a centavos. */
+/** Parses what the user types ("120", "120.50", "$120,50") into cents. */
 export function parseMoney (input: string): number | null {
   const cleaned = input.trim().replace(/[$\s]/g, '').replace(',', '.')
   if (!cleaned) return null

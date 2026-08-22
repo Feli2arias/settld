@@ -3,14 +3,14 @@ import { cn } from '@/lib/utils'
 
 // Contract: PersonAvatar
 // Props: user (required), size ('sm'|'md'|'lg'), className?
-// Variants: tres tamaños. El color de fondo se deriva del username, así que la misma
-//   persona siempre tiene el mismo color en todas las pantallas.
-// States: presentacional puro
-// Accessibility: aria-hidden — las iniciales son decorativas, el nombre siempre está
-//   escrito al lado en texto real
-// Responsive: sin cambios por breakpoint
+// Variants: three sizes. The background colour derives from the username, so the same
+//   person always gets the same colour across every screen.
+// States: purely presentational
+// Accessibility: aria-hidden — the initials are decorative, the name is always written
+//   next to them as real text
+// Responsive: no changes per breakpoint
 
-/** Paleta de fondos para avatares, en tonos que conviven con el papel. */
+/** Avatar background palette, in tones that sit well against the paper. */
 const TINTS = [
   'bg-[oklch(0.90_0.09_140)] text-[oklch(0.30_0.09_145)]',
   'bg-[oklch(0.90_0.07_60)] text-[oklch(0.34_0.10_50)]',

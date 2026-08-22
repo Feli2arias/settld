@@ -26,14 +26,14 @@ type Stage =
   | { name: 'error', message: string }
 
 /**
- * Settle Up.
+ * Settle up.
  *
- * Es la única pantalla donde Settld toca plata de verdad, así que sigue una regla
- * estricta: nada se manda a la red sin que el usuario haya visto antes el monto
- * exacto, el costo de red y cómo le queda el saldo, y haya apretado confirmar.
+ * This is the only screen where Settld touches real money, so it follows a strict
+ * rule: nothing goes to the network until the user has seen the exact amount, the
+ * network cost and what their balance will look like, and has pressed confirm.
  *
- * Un usuario sólo firma transferencias que salen de SU wallet. Settld nunca paga
- * en nombre de otro.
+ * A user only ever signs transfers leaving THEIR wallet. Settld never pays on
+ * somebody else's behalf.
  */
 export default function SettlePage ({ params }: PageProps<'/groups/[id]/settle'>) {
   const { id } = use(params)
@@ -43,11 +43,11 @@ export default function SettlePage ({ params }: PageProps<'/groups/[id]/settle'>
 
   const plan = detail && session ? settlementPlan(detail.expenses, detail.settlements, session.userId) : null
 
-  /** Paso 1: pedirle a WDK una simulación de la transferencia, sin ejecutarla. */
+  /** Step 1: ask WDK to simulate the transfer without executing it. */
   const startQuote = useCallback(async (payment: Payment, payee: User) => {
     const seedPhrase = readSeed()
     if (!seedPhrase) {
-      setStage({ name: 'error', message: 'No encontramos tu wallet en este dispositivo' })
+      setStage({ name: 'error', message: "We couldn't find your wallet on this device" })
       return
     }
 
@@ -57,11 +57,11 @@ export default function SettlePage ({ params }: PageProps<'/groups/[id]/settle'>
       const quote = await previewTransfer(seedPhrase, payee.walletAddress, payment.amountCents)
       setStage({ name: 'preview', payment, payee, quote })
     } catch (err) {
-      setStage({ name: 'error', message: err instanceof Error ? err.message : 'No pudimos preparar el pago' })
+      setStage({ name: 'error', message: err instanceof Error ? err.message : "We couldn't prepare the payment" })
     }
   }, [])
 
-  // Si sólo hay una deuda, no tiene sentido hacer elegir: vamos directo al preview.
+  // With a single debt there's nothing to choose: go straight to the preview.
   useEffect(() => {
     if (stage.name !== 'choosing' || !plan || !detail) return
     if (plan.owes.length !== 1) return
@@ -70,15 +70,15 @@ export default function SettlePage ({ params }: PageProps<'/groups/[id]/settle'>
     void startQuote(payment, memberOf(detail, payment.to) as User)
   }, [stage.name, plan, detail, startQuote])
 
-  /** Paso 2: ejecutar de verdad, y recién ahí anotarlo. */
+  /** Step 2: actually execute, and only then record it. */
   async function confirmAndPay (payment: Payment, payee: User) {
     const seedPhrase = readSeed()
     if (!seedPhrase || !session) return
 
     setStage({ name: 'paying', payment, payee })
 
-    // Se completa apenas la transferencia sale a la red, antes de esperar la
-    // confirmación: si el usuario cierra la app justo ahí, el pago igual queda anotado.
+    // Filled in as soon as the transfer leaves for the network, before waiting for
+    // confirmation: if the user closes the app right then, the payment is still on record.
     let settlementId: string | null = null
 
     try {
@@ -108,7 +108,7 @@ export default function SettlePage ({ params }: PageProps<'/groups/[id]/settle'>
       if (!receipt.success) {
         setStage({
           name: 'error',
-          message: 'El pago salió pero la red todavía no lo confirmó. Volvé al grupo en un minuto para verlo.'
+          message: "The payment went out but the network hasn't confirmed it yet. Come back to the group in a minute to see it."
         })
         return
       }
@@ -116,22 +116,22 @@ export default function SettlePage ({ params }: PageProps<'/groups/[id]/settle'>
       await reload()
       setStage({ name: 'done', payment, payee, txHash: receipt.txHash })
     } catch (err) {
-      // Si ya habíamos registrado el pago, la plata salió: no mentimos diciendo que falló.
+      // If we already recorded the payment, the money left: we don't lie and say it failed.
       if (settlementId) {
         setStage({
           name: 'error',
-          message: 'El pago salió pero perdimos el hilo. Volvé al grupo en un minuto para verlo.'
+          message: 'The payment went out but we lost track of it. Come back to the group in a minute to see it.'
         })
         return
       }
-      setStage({ name: 'error', message: err instanceof Error ? err.message : 'El pago no se pudo completar' })
+      setStage({ name: 'error', message: err instanceof Error ? err.message : 'The payment could not be completed' })
     }
   }
 
   if (!session || !detail || !plan) {
     return (
-      <AppShell title="Saldar" backHref={`/groups/${id}`}>
-        <p className="pt-8 text-sm text-muted-foreground">Cargando…</p>
+      <AppShell title="Settle up" backHref={`/groups/${id}`}>
+        <p className="pt-8 text-sm text-muted-foreground">Loading…</p>
       </AppShell>
     )
   }
@@ -148,11 +148,11 @@ export default function SettlePage ({ params }: PageProps<'/groups/[id]/settle'>
             <Check className="size-10" strokeWidth={3} />
           </span>
 
-          <p className="eyebrow mb-4">Pago completado</p>
+          <p className="eyebrow mb-4">Payment complete</p>
           <Amount cents={stage.payment.amountCents} size="hero" />
 
           <p className="mt-6 text-base font-semibold">
-            Le pagaste a {stage.payee.name}
+            You paid {stage.payee.name}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">{detail.group.name}</p>
 
@@ -170,7 +170,7 @@ export default function SettlePage ({ params }: PageProps<'/groups/[id]/settle'>
         </div>
 
         <Button size="pill-lg" className="mt-10" asChild>
-          <Link href={`/groups/${id}`}>Listo</Link>
+          <Link href={`/groups/${id}`}>Done</Link>
         </Button>
       </AppShell>
     )
@@ -183,9 +183,9 @@ export default function SettlePage ({ params }: PageProps<'/groups/[id]/settle'>
         <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
           <Loader2 className="size-8 animate-spin text-credit" aria-hidden />
           <div>
-            <p className="font-heading text-2xl font-bold">Enviando el pago</p>
+            <p className="font-heading text-2xl font-bold">Sending the payment</p>
             <p className="mt-2 text-sm text-muted-foreground">
-              Esperando la confirmación de la red. No cierres la app.
+              Waiting for the network to confirm. Don't close the app.
             </p>
           </div>
         </div>
@@ -193,57 +193,57 @@ export default function SettlePage ({ params }: PageProps<'/groups/[id]/settle'>
     )
   }
 
-  // --- Algo falló ---
+  // --- Something failed ---
   if (stage.name === 'error') {
     return (
-      <AppShell title="Saldar" backHref={`/groups/${id}`}>
+      <AppShell title="Settle up" backHref={`/groups/${id}`}>
         <div className="flex flex-1 flex-col justify-center gap-6">
           <p role="alert" className="rounded-3xl bg-debit-surface px-5 py-4 text-sm font-semibold text-debit">
             {stage.message}
           </p>
           <Button size="pill-lg" variant="secondary" onClick={() => setStage({ name: 'choosing' })}>
-            Volver a intentar
+            Try again
           </Button>
         </div>
       </AppShell>
     )
   }
 
-  // --- Nada que saldar ---
+  // --- Nothing to settle ---
   if (plan.owes.length === 0) {
     return (
-      <AppShell title="Saldar" backHref={`/groups/${id}`}>
+      <AppShell title="Settle up" backHref={`/groups/${id}`}>
         <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <p className="font-heading text-4xl font-extrabold text-credit">Estás al día ✓</p>
-          <p className="mt-3 text-sm text-muted-foreground">No debés nada en este grupo.</p>
+          <p className="font-heading text-4xl font-extrabold text-credit">You're all settled ✓</p>
+          <p className="mt-3 text-sm text-muted-foreground">You don't owe anything in this group.</p>
         </div>
         <Button size="pill-lg" variant="secondary" className="mt-10" asChild>
-          <Link href={`/groups/${id}`}>Volver al grupo</Link>
+          <Link href={`/groups/${id}`}>Back to the group</Link>
         </Button>
       </AppShell>
     )
   }
 
-  // --- Preparando el preview ---
+  // --- Preparing the preview ---
   if (stage.name === 'quoting') {
     return (
-      <AppShell title="Saldar" backHref={`/groups/${id}`}>
+      <AppShell title="Settle up" backHref={`/groups/${id}`}>
         <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
           <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
-          <p className="text-sm text-muted-foreground">Preparando el pago…</p>
+          <p className="text-sm text-muted-foreground">Preparing the payment…</p>
         </div>
       </AppShell>
     )
   }
 
-  // --- Preview: el usuario ve exactamente qué va a pasar ---
+  // --- Preview: the user sees exactly what is about to happen ---
   if (stage.name === 'preview') {
     const { payment, payee, quote } = stage
 
     return (
-      <AppShell title="Saldar" backHref={`/groups/${id}`} className="justify-between">
+      <AppShell title="Settle up" backHref={`/groups/${id}`} className="justify-between">
         <div className="flex-1 pt-6">
-          <p className="eyebrow mb-3">Le pagás a</p>
+          <p className="eyebrow mb-3">You're paying</p>
 
           <div className="flex items-center gap-3">
             <PersonAvatar user={payee} size="lg" />
@@ -259,22 +259,22 @@ export default function SettlePage ({ params }: PageProps<'/groups/[id]/settle'>
 
           <dl className="mt-10 space-y-3 rounded-3xl bg-card px-5 py-5 ring-1 ring-border">
             <div className="flex items-baseline justify-between gap-4">
-              <dt className="text-sm font-semibold text-muted-foreground">Tu saldo</dt>
+              <dt className="text-sm font-semibold text-muted-foreground">Your balance</dt>
               <dd className="text-sm font-bold tabular-nums">{formatMoney(quote.balanceCents)}</dd>
             </div>
             <div className="flex items-baseline justify-between gap-4">
-              <dt className="text-sm font-semibold text-muted-foreground">Costo de red</dt>
+              <dt className="text-sm font-semibold text-muted-foreground">Network cost</dt>
               <dd className="text-sm font-bold tabular-nums">{formatMoney(quote.feeCents)}</dd>
             </div>
             <div className="flex items-baseline justify-between gap-4 border-t border-border pt-3">
-              <dt className="text-sm font-semibold text-muted-foreground">Te queda</dt>
+              <dt className="text-sm font-semibold text-muted-foreground">You&rsquo;ll have left</dt>
               <dd className="text-sm font-bold tabular-nums">{formatMoney(quote.balanceAfterCents)}</dd>
             </div>
           </dl>
 
           {!quote.hasEnough && (
             <p role="alert" className="mt-4 rounded-2xl bg-debit-surface px-4 py-3 text-sm font-semibold text-debit">
-              No te alcanza el saldo. Cargá saldo desde el inicio y volvé.
+              Not enough balance. Add money from the home screen and come back.
             </p>
           )}
         </div>
@@ -285,24 +285,24 @@ export default function SettlePage ({ params }: PageProps<'/groups/[id]/settle'>
             disabled={!quote.hasEnough}
             onClick={() => confirmAndPay(payment, payee)}
           >
-            Confirmar y pagar
+            Confirm and pay
           </Button>
           <p className="text-center text-xs text-muted-foreground">
-            Sale de tu wallet. Powered by WDK.
+            Leaves your wallet. Powered by WDK.
           </p>
         </div>
       </AppShell>
     )
   }
 
-  // --- Varias deudas: el usuario elige cuál saldar ---
+  // --- Several debts: the user picks which one to settle ---
   return (
-    <AppShell title="Saldar" backHref={`/groups/${id}`} className="gap-6">
+    <AppShell title="Settle up" backHref={`/groups/${id}`} className="gap-6">
       <div className="pt-4">
-        <p className="eyebrow mb-3">Debés en total</p>
+        <p className="eyebrow mb-3">You owe in total</p>
         <Amount cents={Math.abs(plan.netCents)} size="hero" tone="debit" />
         <p className="mt-4 text-sm text-muted-foreground">
-          Se salda con {plan.owes.length} {plan.owes.length === 1 ? 'pago' : 'pagos'}.
+          Settles with {plan.owes.length} {plan.owes.length === 1 ? 'payment' : 'payments'}.
         </p>
       </div>
 

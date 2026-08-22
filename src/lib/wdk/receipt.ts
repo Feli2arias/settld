@@ -1,14 +1,14 @@
 /**
- * Cómo Settld se entera de que un pago realmente ocurrió.
+ * How Settld finds out that a payment actually happened.
  *
- * El camino obvio es preguntarle al bundler, pero el bundler público tiene rate limit
- * y falla justo cuando más importa. Así que vamos a la fuente de verdad: el contrato
- * EntryPoint de ERC-4337 emite un evento por cada operación ejecutada, y ese evento
- * vive en la blockchain, donde nadie nos lo puede negar.
+ * The obvious route is to ask the bundler, but the public bundler is rate limited and
+ * fails exactly when it matters most. So we go to the source of truth: the ERC-4337
+ * EntryPoint contract emits an event for every executed operation, and that event lives
+ * on the blockchain, where nobody can deny it to us.
  *
- * De ahí sacamos las dos cosas que necesitamos: si la operación salió bien, y el hash
- * de la transacción real —que no es el mismo que el hash de la operación— para poder
- * linkear al explorer.
+ * From it we get the two things we need: whether the operation succeeded, and the real
+ * transaction hash — which is not the same as the operation hash — so we can link to
+ * the explorer.
  */
 
 import { RPC_URL } from './config'
@@ -33,7 +33,7 @@ async function rpc<T> (method: string, params: unknown[]): Promise<T> {
   })
 
   const payload = await response.json()
-  if (payload.error) throw new Error(payload.error.message ?? 'Error del nodo')
+  if (payload.error) throw new Error(payload.error.message ?? 'Node error')
 
   return payload.result as T
 }
@@ -46,8 +46,8 @@ export interface UserOpOutcome {
 }
 
 /**
- * El campo `data` del evento son cuatro palabras de 32 bytes:
- * nonce | success | actualGasCost | actualGasUsed. La que nos importa es la segunda.
+ * The event's `data` field is four 32-byte words:
+ * nonce | success | actualGasCost | actualGasUsed. The one we care about is the second.
  */
 export function decodeSuccess (data: string): boolean {
   const body = data.replace(/^0x/, '')
@@ -74,10 +74,10 @@ async function findUserOp (userOpHash: string, fromBlock: string): Promise<UserO
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 /**
- * Espera a que la operación aparezca en la blockchain.
+ * Waits for the operation to show up on the blockchain.
  *
- * Devuelve `null` si se acabó el tiempo. Ojo: eso NO significa que el pago falló,
- * significa que todavía no lo vimos. Quien llama tiene que tratarlo como "pendiente".
+ * Returns `null` if time ran out. Careful: that does NOT mean the payment failed, it
+ * means we haven't seen it yet. The caller has to treat it as "pending".
  */
 export async function waitForUserOp (
   userOpHash: string,
@@ -91,7 +91,7 @@ export async function waitForUserOp (
       const outcome = await findUserOp(userOpHash, fromBlock)
       if (outcome) return outcome
     } catch {
-      // Un nodo que se cae no es una respuesta: reintentamos hasta que se acabe el tiempo.
+      // A node going down is not an answer: we retry until time runs out.
     }
 
     await sleep(3000)

@@ -1,274 +1,272 @@
 # Settld
 
-**Split expenses. Settle instantly.** — Aleph Hackathon 2026, track WDK.
+**Split expenses. Settle instantly.** — Aleph Hackathon 2026, WDK track.
 
-Las apps de gastos compartidos te dicen quién te debe. Settld hace que te paguen: calcula
-las deudas del grupo y las liquida con una transferencia real de USD₮ desde una wallet
-self-custodial creada con el [Wallet Development Kit de Tether](https://docs.wdk.tether.io).
+Shared-expense apps tell you who owes you. Settld gets you paid: it works out the group's
+debts and clears them with a real USD₮ transfer from a self-custodial wallet built with
+[Tether's Wallet Development Kit](https://docs.wdk.tether.io).
 
-> Settld decide **quién le paga a quién**. WDK hace que el pago **ocurra de verdad**.
+> Settld decides **who pays whom**. WDK makes the payment **actually happen**.
 
 ---
 
-## Cómo correrlo
+## Running it
 
 ```bash
 npm install --prefix split && npm run dev --prefix split
 ```
 
-Abrí <http://localhost:3000>. Para demostrar con dos personas, `next dev` también sirve la
-app en la IP de red local (la imprime al arrancar): abrila desde dos celulares del mismo wifi.
+Open <http://localhost:3000>. To demo with two people, `next dev` also serves the app on
+your local network IP (it prints it on startup): open it from two phones on the same wifi.
 
-Hace falta un `.env.local` con la seed de la cuenta de tesorería, que es la que fondea a los
-usuarios nuevos cuando tocan "Cargar saldo":
-
-```
-TREASURY_SEED_PHRASE="las doce palabras de la wallet de tesorería"
-```
-
-Opcional pero **muy recomendado para demostrar en vivo** (ver *Riesgos conocidos*):
+You need a `.env.local` with the treasury account's seed, which is what funds new users
+when they tap "Add money" → "Test funds":
 
 ```
-NEXT_PUBLIC_BUNDLER_URL="https://api.pimlico.io/v2/11155111/rpc?apikey=TU_API_KEY"
+TREASURY_SEED_PHRASE="the twelve words of the treasury wallet"
 ```
 
-### Dónde se guardan los datos
+Optional but **strongly recommended for a live demo** (see *Known risks*):
 
-Se elige solo según el entorno, en `src/lib/store/backend.ts`:
+```
+NEXT_PUBLIC_BUNDLER_URL="https://api.pimlico.io/v2/11155111/rpc?apikey=YOUR_API_KEY"
+```
 
-- **Local**: un JSON en `.data/split.json`. Cero setup.
-- **Vercel**: Redis (Upstash), porque en serverless el filesystem es de sólo lectura.
-  Se activa apenas existen `KV_REST_API_URL` y `KV_REST_API_TOKEN`, que la integración
-  de Vercel inyecta sola. Habla el API REST con `fetch` pelado, sin dependencias nuevas.
+### Where the data lives
 
-Ojo: si corrés local con esas variables presentes, vas a estar escribiendo en la misma
-base que producción.
+The environment picks this on its own, in `src/lib/store/backend.ts`:
 
-Otros comandos:
+- **Local**: a JSON file at `.data/split.json`. Zero setup.
+- **Vercel**: Redis (Upstash), because the serverless filesystem is read-only. It kicks in
+  as soon as `KV_REST_API_URL` and `KV_REST_API_TOKEN` exist, which Vercel's integration
+  injects on its own. Speaks the REST API with bare `fetch`, no new dependencies.
+
+Careful: if you run locally with those variables present, you're writing to the same
+database as production.
+
+Other commands:
 
 ```bash
-npm run test --prefix split        # tests de la lógica de deudas y de plata
+npm run test --prefix split        # tests for the debt logic and the money handling
 npm run typecheck --prefix split   # tsc
-npm run build --prefix split       # build de producción
+npm run build --prefix split       # production build
 ```
 
 ---
 
-## Guion de la demo
+## Demo script
 
-La historia es una sola: Daniel paga una cena, Felipe queda debiendo, Felipe salda, y la
-plata se mueve de verdad.
+There's one story: Daniel pays for dinner, Felipe ends up owing, Felipe settles, and the
+money actually moves.
 
-1. **Daniel** crea su cuenta. Detrás, WDK genera una seed en el dispositivo y deriva su
-   wallet. Daniel nunca ve una seed phrase ni sabe que tiene una.
-2. Daniel toca **Cargar saldo** → **Fondos de prueba** y aparecen $50.
-3. Crea el grupo **Aleph Hackathon** y suma a **@felipe**.
-4. Carga el gasto **Cena, $20**, dividido entre los dos. Settld calcula **$10 cada uno**.
-5. **Felipe** abre el grupo y ve **"Debés $10.00"**.
-6. Toca **Saldar mi deuda** → el preview le muestra a quién le paga, cuánto, cuánto sale
-   de red y con cuánto queda. Nada salió todavía.
-7. **Confirmar y pagar** → WDK transfiere 10 USD₮ de la wallet de Felipe a la de Daniel.
-8. Aparece el **receipt con el hash**, linkeado a Sepolia Etherscan.
-9. El grupo se actualiza: Felipe **✓ saldado**, y el saldo de Daniel sube.
+1. **Daniel** creates his account. Underneath, WDK generates a seed on the device and
+   derives his wallet. Daniel never sees a seed phrase or knows he has one.
+2. Daniel taps **Add money** → **Test funds** and $50 shows up.
+3. He creates the **Aleph Hackathon** group and adds **@felipe**.
+4. He enters the expense **Dinner, $20**, split between the two. Settld works out **$10 each**.
+5. **Felipe** opens the group and sees **"You owe $10.00"**.
+6. He taps **Settle up** → the preview shows him who he's paying, how much, what the
+   network costs and what he'll have left. Nothing has gone out yet.
+7. **Confirm and pay** → WDK transfers 10 USD₮ from Felipe's wallet to Daniel's.
+8. The **receipt with the hash** appears, linked to Sepolia Etherscan.
+9. The group updates: Felipe **✓ settled**, and Daniel's balance goes up.
 
-Momento clave para los jueces: el paso 8. Es una transacción real, verificable en un
-explorer público, disparada desde una app que nunca dijo la palabra "blockchain".
+The moment that matters to judges is step 8. It's a real transaction, verifiable on a
+public explorer, fired from an app that never said the word "blockchain".
 
 ---
 
-## Cómo está armado
+## How it's put together
 
 ```
-usuario
+user
    ↓
-Settld UI  ─────────────────┐
+Settld UI  ────────────────┐
    │                       │
    ▼                       ▼
-lógica de Settld           WDK
-usuarios, grupos          wallet self-custodial
-gastos, división          address y balance
-quién le debe a quién     preview del pago
-net settlement            transferencia de USD₮
-estado de los pagos       receipt
+Settld logic              WDK
+users, groups             self-custodial wallet
+expenses, splitting       address and balance
+who owes whom             payment preview
+net settlement            USD₮ transfer
+payment status            receipt
    │                       │
    └──────────┬────────────┘
               ▼
          blockchain
 ```
 
-| Carpeta | Qué hay |
+| Folder | What's in it |
 |---|---|
-| `src/lib/split/` | El cerebro: balances netos y settlement mínimo. Funciones puras, con tests. |
-| `src/lib/wdk/` | Todo lo que toca la blockchain: wallet, montos, receipts, config de red. |
-| `src/lib/store/` | Persistencia y validación de entrada. `backend.ts` elige dónde guardar. |
-| `src/lib/client/` | Sesión, seed local y cliente de la API. |
-| `src/app/` | Pantallas y rutas de API. |
+| `src/lib/split/` | The brain: net balances and minimum settlement. Pure functions, with tests. |
+| `src/lib/wdk/` | Everything that touches the blockchain: wallet, amounts, receipts, network config. |
+| `src/lib/store/` | Persistence and input validation. `backend.ts` picks where to store. |
+| `src/lib/client/` | Session, local seed and the API client. |
+| `src/app/` | Screens and API routes. |
 
-### La UI cambia según el dispositivo
+### The UI changes with the device
 
-No es la misma pantalla estirada: son dos layouts distintos que comparten los componentes.
+It isn't one screen stretched: they're two different layouts sharing the same components.
 
 | | mobile (<768) | tablet (768–1023) | desktop (≥1024) |
 |---|---|---|---|
-| Navegación | barra superior pegajosa con botón de volver | igual | barra lateral fija con los grupos siempre a la vista |
-| Ancho | una columna de 28rem, pensada para el pulgar | 42rem | hasta 64rem, alineado a la izquierda junto a la barra |
-| Landing | titular y botón apilados | igual | titular a la izquierda, un vistazo al producto a la derecha |
-| Home | grupos en lista | grupos en dos columnas | grupos en dos columnas, sin el botón de "Nuevo grupo" porque ya está en la barra |
-| Grupo | todo en una columna | igual | dos columnas: resumen y deudas a la izquierda, gastos a la derecha |
-| Formularios | pantalla completa, botón abajo | igual | tarjeta centrada verticalmente |
+| Navigation | sticky top bar with a back button | same | fixed sidebar with the groups always in view |
+| Width | a single 28rem column, built for the thumb | 42rem | up to 64rem, left-aligned next to the sidebar |
+| Landing | headline and buttons stacked | same | headline left, a look at the product right |
+| Home | groups as a list | groups in two columns | groups in two columns, no "New group" button because it's in the sidebar |
+| Group | everything in one column | same | two columns: summary and debts left, expenses right |
+| Forms | full screen, button at the bottom | same | vertically centred card |
 
-El truco para no duplicar el markup del grupo es `display: contents`: en mobile los
-contenedores de columna desaparecen y todo cae en una sola columna; a partir de `lg`
-se vuelven flex y arman las dos columnas.
+The trick that avoids duplicating the group markup is `display: contents`: on mobile the
+column containers disappear and everything falls into a single column; from `lg` up they
+become flex and build the two columns.
 
-### Cómo se carga saldo
+### How you add money
 
-"Cargar saldo" abre un menú con tres caminos, todos escritos para alguien que no sabe
-—ni le importa— que hay una blockchain abajo:
+"Add money" opens a menu with three routes, all written for someone who doesn't know —
+and doesn't care — that there's a blockchain underneath:
 
-| | Qué hace | Estado |
+| | What it does | Status |
 |---|---|---|
-| **Con tarjeta** | Abre el checkout de MoonPay vía WDK. Se paga con débito o crédito y los fondos caen directo en la wallet. | Necesita clave (abajo) |
-| **Que te manden** | Muestra un QR y la address para que otro te mande plata. | Funcionando |
-| **Fondos de prueba** | Los $50 de la tesorería. | Funcionando |
+| **With a card** | Opens MoonPay's checkout via WDK. Pay by debit or credit and the funds land straight in the wallet. | Needs a key (below) |
+| **Get paid** | Shows a QR and the address so someone else can send you money. | Working |
+| **Test funds** | $50 from the treasury. | Working |
 
-La address aparece sólo como respaldo de quien escanea el QR, nunca como el camino
-principal. En ninguna pantalla se dice "wallet", "token" ni "blockchain".
+The address only appears as a fallback for whoever scans the QR, never as the main path.
+No screen says "wallet", "token" or "blockchain".
 
-#### Activar el pago con tarjeta
+#### Turning on card payments
 
-El botón aparece recién cuando hay clave configurada — preferimos no mostrarlo antes que
-ofrecer algo que no lleva a ningún lado. Sacá una clave publicable en
-[dashboard.moonpay.com](https://dashboard.moonpay.com/signup) y agregá a `.env.local`:
+The button only shows up once a key is configured — we'd rather hide it than offer
+something that leads nowhere. Get a publishable key at
+[dashboard.moonpay.com](https://dashboard.moonpay.com/signup) and add to `.env.local`:
 
 ```
 NEXT_PUBLIC_MOONPAY_API_KEY="pk_test_..."
 NEXT_PUBLIC_MOONPAY_ENVIRONMENT="sandbox"
 ```
 
-En `sandbox` MoonPay simula la compra entera sin cobrar un peso, así que se puede
-demostrar de punta a punta.
+In `sandbox` MoonPay simulates the whole purchase without charging a cent, so it can be
+demoed end to end.
 
-⚠️ **Ojo con lo que se promete en la demo:** corremos sobre Sepolia con un USD₮ *mock*,
-que es un contrato de prueba y no un activo que MoonPay pueda vender. El checkout se abre
-y se completa, pero los fondos no van a aparecer en el saldo. Para que la compra acredite
-de verdad hay que pasar a una red real con USD₮ real. Es honesto mostrarlo como "así se
-compra", no como "mirá cómo entra la plata".
+⚠️ **Careful what you promise in the demo:** we run on Sepolia with a *mock* USD₮, which is
+a test contract and not an asset MoonPay can sell. The checkout opens and completes, but
+the funds will not show up in the balance. For a purchase to actually land you'd have to
+move to a real network with real USD₮. It's honest to show it as "this is how you buy",
+not as "watch the money come in".
 
-### Cuenta y recuperación
+### Accounts and recovery
 
-La cuenta **es** la wallet. Eso plantea un problema: si la credencial fuera la frase de
-12 palabras, entrar se sentiría cualquier cosa menos una app normal. Y si el servidor
-guardara la clave para poder ofrecer usuario y contraseña, Settld sería custodial y podría
-gastar la plata de sus usuarios.
+The account **is** the wallet. That poses a problem: if the credential were the 12-word
+phrase, signing in would feel like anything but a normal app. And if the server stored the
+key so it could offer a username and password, Settld would be custodial and could spend
+its users' money.
 
-La salida es cifrar la wallet con la contraseña, en el dispositivo:
+The way out is encrypting the wallet with the password, on the device:
 
-1. Al crear la cuenta, el navegador genera la wallet y la cifra con la contraseña
-   (PBKDF2 con 300.000 vueltas + AES-GCM, todo con WebCrypto, sin dependencias).
-2. Al servidor le llega **sólo el bulto cifrado**. La contraseña no sale nunca del
-   dispositivo, y sin ella el bulto no abre ni para nosotros.
-3. Al entrar, el navegador se baja el bulto, lo abre con la contraseña y recupera la wallet.
+1. When the account is created, the browser generates the wallet and encrypts it with the
+   password (PBKDF2 at 300,000 rounds + AES-GCM, all WebCrypto, no dependencies).
+2. The server only ever receives **the encrypted bundle**. The password never leaves the
+   device, and without it the bundle doesn't open, not even for us.
+3. On sign-in, the browser downloads the bundle, opens it with the password and recovers
+   the wallet.
 
-Resultado: se entra con usuario y contraseña como en cualquier app, y las claves siguen
-siendo del usuario.
+The result: you sign in with a username and password like any app, and the keys stay the
+user's.
 
-**La frase de recuperación queda como plan B**, para cuando la contraseña se olvidó. Está
-a un toque, tocando tu nombre en la pantalla de inicio, junto con tu address y el botón de
-cerrar sesión. Al crear la cuenta no se la mostramos a nadie: eso arruinaría el momento
-de entrada.
+**The recovery phrase is the fallback**, for when the password is forgotten. It's one tap
+away, by tapping your name on the home screen, alongside your address and the sign-out
+button. We don't show it to anyone at signup: that would ruin the moment of walking in.
 
-Detalles que importan:
+Details that matter:
 
-- El vault nunca viaja junto al resto del usuario. `/api/users/lookup` y el detalle de
-  grupo lo sacan de la respuesta; se entrega sólo por `/api/users/vault`, al iniciar sesión.
-- AES-GCM verifica integridad, así que una contraseña equivocada o un bulto manipulado
-  fallan en vez de devolver basura.
-- **Límite conocido**: cualquiera puede pedir el vault de un usuario y probarle contraseñas
-  offline. Las 300.000 vueltas lo hacen caro, pero contra una contraseña floja no alcanza.
-  Una app de verdad necesita además rate limiting y exigir contraseñas más fuertes.
+- The vault never travels alongside the rest of the user. `/api/users/lookup` and the group
+  detail strip it from the response; it's served only through `/api/users/vault`, at sign-in.
+- AES-GCM verifies integrity, so a wrong password or a tampered bundle fail instead of
+  returning garbage.
+- **Known limit**: anyone can request a user's vault and try passwords against it offline.
+  The 300,000 rounds make that expensive, but against a weak password it isn't enough. A
+  real app also needs rate limiting and stronger password requirements.
 
-Efecto secundario útil para la demo: con esto podés mostrar el flujo de dos personas en un
-solo dispositivo, cerrando sesión y entrando con la otra cuenta.
+Useful side effect for the demo: this lets you show the two-person flow on a single device,
+signing out and signing back in as the other account.
 
-### Decisiones que importan
+### Decisions that matter
 
-**La wallet corre en el navegador.** La seed se genera en el dispositivo y no sale de ahí.
-El servidor sólo conoce la address pública, que es lo que hace falta para que otros te paguen.
+**The wallet runs in the browser.** The seed is generated on the device and never leaves it.
+The server only knows the public address, which is all that's needed for others to pay you.
 
-**El gas se paga en USD₮.** Usamos ERC-4337 con paymaster, así que ningún usuario necesita
-tener ETH. Crea la cuenta, recibe USD₮ y ya puede pagar. Sin esto, cada persona del demo
-tendría que pasar por un faucet de ETH con captcha antes de poder hacer nada.
+**Gas is paid in USD₮.** We use ERC-4337 with a paymaster, so no user needs to hold ETH.
+They create an account, receive USD₮ and can pay. Without this, every person in the demo
+would have to go through a captcha-gated ETH faucet before doing anything.
 
-**La confirmación sale de la blockchain, no del bundler.** Ver *Riesgos conocidos*.
+**Confirmation comes from the blockchain, not the bundler.** See *Known risks*.
 
-**Los montos son enteros.** Todo se guarda en centavos y se reparte de forma que la suma
-siempre cierre: si $10 se divide entre 3, alguien paga $3.34 y no se pierde ni se inventa
-un centavo.
-
----
-
-## Estado
-
-Funciona end-to-end, verificado en cadena:
-
-- [x] Onboarding que crea la wallet con WDK
-- [x] Cargar saldo: tarjeta (MoonPay vía WDK), QR para recibir, o fondos de prueba
-- [x] Entrar con usuario y contraseña (la wallet se cifra con la contraseña, en el dispositivo)
-- [x] Frase de recuperación como plan B, y cerrar sesión
-- [x] Address y balance reales
-- [x] Grupos y miembros por `@usuario`
-- [x] Gastos divididos en partes iguales
-- [x] Cálculo de quién le debe a quién + settlement mínimo
-- [x] Preview del pago con costo de red y saldo resultante
-- [x] Confirmación explícita del usuario
-- [x] Transferencia real de USD₮ vía WDK
-- [x] Receipt con tx hash linkeado al explorer
-- [x] Deuda marcada como saldada
-
-Fuera de alcance por decisión: smart contracts, multisig, bridges, DeFi, pre-signatures,
-y cualquier cosa que custodie las claves del usuario.
+**Amounts are integers.** Everything is stored in cents and split so the sum always closes:
+if $10 is divided between 3, somebody pays $3.34 and not a single cent is lost or invented.
 
 ---
 
-## Riesgos conocidos
+## Status
 
-**El bundler público tiene rate limit.** Pasó durante el desarrollo: la transferencia entra
-bien, pero al consultar su estado el bundler devuelve *"Public API key rate limit exceeded"*.
-Por eso la confirmación no le pregunta al bundler: lee el evento `UserOperationEvent` que
-emite el contrato EntryPoint, directo desde el RPC (`src/lib/wdk/receipt.ts`). De ahí salen
-el hash real de la transacción y si la operación tuvo éxito. Aun así, para una demo en vivo
-conviene sacar una API key gratuita en [dashboard.pimlico.io](https://dashboard.pimlico.io)
-y ponerla en `NEXT_PUBLIC_BUNDLER_URL`: el preview del pago sí consulta al bundler para
-cotizar el fee.
+Works end to end, verified on-chain:
 
-**Una vez enviado, un pago nunca se reporta como fallido.** Si `transfer()` volvió, la plata
-está en camino. A partir de ahí lo peor que puede pasar es que todavía no sepamos si llegó,
-y eso se muestra como pendiente, nunca como error. El settlement se registra antes de
-esperar la confirmación, así que queda rastro aunque el usuario cierre la app.
+- [x] Onboarding that creates the wallet with WDK
+- [x] Adding money: card (MoonPay via WDK), QR to get paid, or test funds
+- [x] Signing in with username and password (the wallet is encrypted with it, on the device)
+- [x] Recovery phrase as the fallback, and signing out
+- [x] Real address and balance
+- [x] Groups and members by `@username`
+- [x] Expenses split evenly
+- [x] Working out who owes whom + minimum settlement
+- [x] Payment preview with network cost and resulting balance
+- [x] Explicit user confirmation
+- [x] Real USD₮ transfer via WDK
+- [x] Receipt with a tx hash linked to the explorer
+- [x] Debt marked as settled
 
-**La seed se guarda en localStorage sin cifrar.** Aceptable acá porque corremos sobre
-Sepolia con USD₮ de prueba, que no vale nada. Para plata real hay que pedirle una
-passphrase al usuario y cifrar con WebCrypto antes de tocar el disco.
-
-**El almacenamiento no tiene transacciones.** Cada mutación es leer → modificar → escribir
-todo el estado. Con dos o tres personas haciendo cosas de a una alcanza de sobra, pero dos
-escrituras exactamente simultáneas desde instancias distintas podrían pisarse. Si el proyecto
-sigue después del hackathon, esto es lo primero que hay que cambiar por una base con
-transacciones de verdad.
+Deliberately out of scope: smart contracts, multisig, bridges, DeFi, pre-signatures, and
+anything that would custody the user's keys.
 
 ---
 
-## La red
+## Known risks
+
+**The public bundler is rate limited.** This happened during development: the transfer goes
+through fine, but querying its status returns *"Public API key rate limit exceeded"*. That's
+why confirmation doesn't ask the bundler: it reads the `UserOperationEvent` the EntryPoint
+contract emits, straight from the RPC (`src/lib/wdk/receipt.ts`). That gives us both the
+real transaction hash and whether the operation succeeded. Even so, for a live demo it's
+worth getting a free API key at [dashboard.pimlico.io](https://dashboard.pimlico.io) and
+putting it in `NEXT_PUBLIC_BUNDLER_URL`: the payment preview does query the bundler to
+quote the fee.
+
+**Once sent, a payment is never reported as failed.** If `transfer()` returned, the money is
+on its way. From that point on, the worst that can happen is that we don't know yet whether
+it arrived, and that shows as pending, never as an error. The settlement is recorded before
+waiting for confirmation, so there's a trace even if the user closes the app.
+
+**The seed is stored in localStorage unencrypted.** Acceptable here because we run on
+Sepolia with test USD₮, which is worth nothing. For real money you'd ask the user for a
+passphrase and encrypt with WebCrypto before touching disk.
+
+**The storage has no transactions.** Every mutation is read → modify → write the whole
+state. With two or three people acting one at a time that's plenty, but two exactly
+simultaneous writes from different instances could clobber each other. If this project
+outlives the hackathon, that's the first thing to swap for a database with real transactions.
+
+---
+
+## The network
 
 | | |
 |---|---|
-| Red | Ethereum Sepolia (testnet) |
-| USD₮ | `0xd077a400968890eacc75cdc901f0356c943e4fdb` — 6 decimales, sin valor real |
+| Network | Ethereum Sepolia (testnet) |
+| USD₮ | `0xd077a400968890eacc75cdc901f0356c943e4fdb` — 6 decimals, no real value |
 | RPC | `ethereum-sepolia-rpc.publicnode.com` |
-| Faucet de USD₮ | [dashboard.pimlico.io/test-erc20-faucet](https://dashboard.pimlico.io/test-erc20-faucet) |
+| USD₮ faucet | [dashboard.pimlico.io/test-erc20-faucet](https://dashboard.pimlico.io/test-erc20-faucet) |
 
-Los USD₮ de esta testnet no son Tether Tokens, no se pueden canjear y no valen nada.
+The USD₮ on this testnet are not Tether Tokens, cannot be redeemed and are worth nothing.
 
-> El RPC que figura en los docs oficiales de WDK (`sepolia.drpc.org`) dejó de servir Sepolia
-> en el plan gratuito. Si algo no conecta, empezá por ahí.
+> The RPC listed in WDK's official docs (`sepolia.drpc.org`) stopped serving Sepolia on the
+> free plan. If something won't connect, start there.

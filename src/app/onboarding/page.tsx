@@ -15,16 +15,17 @@ import { deriveAddress, generateSeedPhrase } from '@/lib/wdk/wallet'
 
 type Step = 'form' | 'creating'
 
-/** Corta pero no ridícula: el vault se rompe a fuerza bruta si la contraseña es floja. */
+/** Short but not laughable: a weak password makes the vault brute-forceable. */
 const MIN_PASSWORD = 8
 
 /**
- * Crear cuenta = crear wallet. Para el usuario es un solo paso: pone su nombre y
- * listo. Debajo, WDK genera una seed en este dispositivo y deriva la address.
+ * Creating an account means creating a wallet. To the user it's a single step: they
+ * type their name and that's it. Underneath, WDK generates a seed on this device and
+ * derives the address.
  *
- * Acá no le mostramos la frase de recuperación ni le pedimos que entienda qué es:
- * eso arruinaría el momento de entrada. Pero está disponible a un toque desde la
- * pantalla de inicio, y es lo que le permite volver a entrar desde otro dispositivo.
+ * We don't show them the recovery phrase here, and we don't ask them to understand
+ * what it is: that would ruin the moment of walking in. It's one tap away from the
+ * home screen, which is what lets them sign back in from another device.
  */
 export default function OnboardingPage () {
   const router = useRouter()
@@ -48,14 +49,14 @@ export default function OnboardingPage () {
       const seedPhrase = await generateSeedPhrase()
       const walletAddress = await deriveAddress(seedPhrase)
 
-      // Ciframos la wallet con la contraseña acá, en el dispositivo. Al servidor le
-      // llega el bulto cerrado; la contraseña no sale nunca de esta pantalla.
+      // We encrypt the wallet with the password right here, on the device. The server
+      // only ever receives the sealed bundle; the password never leaves this screen.
       const vault = await encryptSeed(seedPhrase, password)
 
       const user = await api.createUser({ name, username, walletAddress, vault })
 
-      // La seed primero: si algo falla después, el usuario no queda con una cuenta
-      // en el servidor cuya wallet ya no puede abrir.
+      // Seed first: if anything fails after this, the user isn't left with an account
+      // on the server whose wallet they can no longer open.
       saveSeed(seedPhrase)
       saveSession({
         userId: user.id,
@@ -66,7 +67,7 @@ export default function OnboardingPage () {
 
       router.replace('/home')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No pudimos crear tu cuenta')
+      setError(err instanceof Error ? err.message : "We couldn't create your account")
       setStep('form')
     }
   }
@@ -77,8 +78,8 @@ export default function OnboardingPage () {
         <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
           <Loader2 className="size-8 animate-spin text-credit" aria-hidden />
           <div>
-            <p className="font-heading text-2xl font-bold">Creando tu cuenta</p>
-            <p className="mt-2 text-sm text-muted-foreground">Preparando tu wallet…</p>
+            <p className="font-heading text-2xl font-bold">Creating your account</p>
+            <p className="mt-2 text-sm text-muted-foreground">Setting up your wallet…</p>
           </div>
         </div>
       </AppShell>
@@ -86,11 +87,11 @@ export default function OnboardingPage () {
   }
 
   return (
-    <AppShell title="Crear cuenta" backHref="/">
+    <AppShell title="Create account" backHref="/">
       <form onSubmit={handleSubmit} className="flex flex-1 flex-col">
         <div className="flex-1 space-y-7 pt-6">
           <div className="space-y-2.5">
-            <Label htmlFor="name" className="eyebrow">Tu nombre</Label>
+            <Label htmlFor="name" className="eyebrow">Your name</Label>
             <Input
               id="name"
               value={name}
@@ -103,7 +104,7 @@ export default function OnboardingPage () {
           </div>
 
           <div className="space-y-2.5">
-            <Label htmlFor="username" className="eyebrow">Usuario</Label>
+            <Label htmlFor="username" className="eyebrow">Username</Label>
             <div className="relative">
               <span
                 aria-hidden
@@ -124,25 +125,25 @@ export default function OnboardingPage () {
               />
             </div>
             <p id="username-hint" className="text-xs text-muted-foreground">
-              Así te van a encontrar tus amigos para sumarte a un grupo.
+              This is how your friends will find you to add you to a group.
             </p>
           </div>
 
           <div className="space-y-2.5">
-            <Label htmlFor="password" className="eyebrow">Contraseña</Label>
+            <Label htmlFor="password" className="eyebrow">Password</Label>
             <Input
               id="password"
               type="password"
               value={password}
               onChange={event => setPassword(event.target.value)}
-              placeholder="Mínimo 8 caracteres"
+              placeholder="At least 8 characters"
               autoComplete="new-password"
               aria-describedby="password-hint"
               className="h-14 rounded-2xl px-5 text-lg"
             />
             <p id="password-hint" className="text-xs text-muted-foreground">
-              Con esto entrás desde cualquier dispositivo. No la guardamos en ningún
-              lado, así que si la perdés vas a necesitar tu frase de recuperación.
+              This is how you sign in from any device. We never store it anywhere, so if
+              you lose it you&rsquo;ll need your recovery phrase.
             </p>
           </div>
 
@@ -155,16 +156,16 @@ export default function OnboardingPage () {
 
         <div className="mt-8 space-y-4">
           <Button type="submit" size="pill-lg" disabled={!canSubmit}>
-            Crear cuenta
+            Create account
           </Button>
 
           <p className="text-center text-sm text-muted-foreground">
-            ¿Ya tenés cuenta?{' '}
+            Already have an account?{' '}
             <Link
               href="/login"
               className="font-bold text-foreground underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
             >
-              Entrá
+              Sign in
             </Link>
           </p>
         </div>

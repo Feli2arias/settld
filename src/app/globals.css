@@ -5,18 +5,18 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   SPLIT — sistema de diseño
+   SETTLD — design system
 
-   Dirección: "recibo editorial". Lienzo de papel cálido, tinta casi negra,
-   y los montos como protagonistas absolutos: números enormes, tabulares y
-   apretados, como los de un ticket impreso.
+   Direction: "editorial receipt". A warm paper canvas, near-black ink, and the
+   amounts as the absolute protagonists: huge, tabular, tightly set numbers, like
+   the ones on a printed ticket.
 
-   La decisión de color más importante es no parecer una app de crypto. Nada de
-   fondo negro con gradiente violeta. Papel, tinta, y un verde lima de señal que
-   sólo aparece cuando hay una acción que tomar o una deuda que se saldó.
+   The most important colour decision is not looking like a crypto app. No black
+   background with a purple gradient. Paper, ink, and a signal lime that only
+   shows up when there's an action to take or a debt that got settled.
 
-   Ningún valor de color, espaciado, radio o duración se escribe suelto en un
-   componente: todo sale de acá.
+   No colour, spacing, radius or duration value is ever written loose inside a
+   component: it all comes from here.
    ───────────────────────────────────────────────────────────────────────────── */
 
 @theme inline {
@@ -44,7 +44,7 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
 
-  /* Semántica de plata: la única distinción que le importa al usuario. */
+  /* Money semantics: the only distinction the user cares about. */
   --color-credit: var(--credit);
   --color-credit-surface: var(--credit-surface);
   --color-debit: var(--debit);
@@ -58,15 +58,15 @@
   --radius-3xl: calc(var(--radius) * 2.6);
   --radius-4xl: calc(var(--radius) * 3.2);
 
-  /* Motion. Enter con ease-out, exit con ease-in. Nunca lineal. */
+  /* Motion. Enter with ease-out, exit with ease-in. Never linear. */
   --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-exit: cubic-bezier(0.7, 0, 0.84, 0);
   --ease-emphasis: cubic-bezier(0.65, 0, 0.35, 1);
 
   /* ───────────────────────────────────────────────────────────────────────────
-     Colores de marca de la landing.
-     A diferencia de los tokens de arriba, estos son fijos: no cambian con el tema.
-     Una página de marca se ve igual siempre, como un afiche.
+     Landing page brand colours.
+     Unlike the tokens above, these are fixed: they don't change with the theme.
+     A brand page looks the same always, like a poster.
      ─────────────────────────────────────────────────────────────────────────── */
   --color-paper: #faf6ee;
   --color-ink: #16150f;
@@ -79,15 +79,15 @@
 :root {
   --radius: 1rem;
 
-  --background: oklch(0.972 0.014 88);       /* papel cálido */
-  --foreground: oklch(0.19 0.008 110);       /* tinta */
+  --background: oklch(0.972 0.014 88);       /* warm paper */
+  --foreground: oklch(0.19 0.008 110);       /* ink */
 
   --card: oklch(1 0.004 88);
   --card-foreground: var(--foreground);
   --popover: oklch(1 0.004 88);
   --popover-foreground: var(--foreground);
 
-  /* Lima de señal sobre verde profundo: el único color que grita. */
+  /* Signal lime over deep green: the only colour that shouts. */
   --primary: oklch(0.885 0.196 128);
   --primary-foreground: oklch(0.31 0.09 145);
 
@@ -106,9 +106,9 @@
   --input: oklch(0.19 0.008 110 / 16%);
   --ring: oklch(0.62 0.13 140);
 
-  --credit: oklch(0.46 0.115 150);           /* te deben */
+  --credit: oklch(0.46 0.115 150);           /* you are owed */
   --credit-surface: oklch(0.948 0.046 140);
-  --debit: oklch(0.525 0.168 33);            /* debés */
+  --debit: oklch(0.525 0.168 33);            /* you owe */
   --debit-surface: oklch(0.952 0.032 45);
 }
 
@@ -160,8 +160,8 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Los montos son el contenido, no la decoración: siempre tabulares para que
-     las columnas de números queden alineadas y no "bailen" al actualizarse. */
+  /* Amounts are the content, not the decoration: always tabular so columns of
+     numbers stay aligned and don't "dance" when they update. */
   .amount {
     font-family: var(--font-display);
     font-variant-numeric: tabular-nums;
@@ -170,23 +170,23 @@
     line-height: 0.88;
   }
 
-  /* Titular de la landing: la grotesca pesada, apretada y apilada. La densidad
-     es la identidad, así que el interlineado por debajo de 1 es a propósito. */
+  /* Landing headline: the heavy grotesque, tight and stacked. The density is the
+     identity, so a line-height below 1 is deliberate. */
   .display {
     font-family: var(--font-display);
     letter-spacing: -0.04em;
     line-height: 0.85;
   }
 
-  /* Micro-etiqueta de sección, en versalitas espaciadas. Es lo que le da el
-     aire de recibo impreso. */
+  /* Section micro-label, in spaced small caps. This is what gives it the printed
+     receipt feel. */
   .eyebrow {
     @apply text-[0.6875rem] font-bold uppercase tracking-[0.16em] text-muted-foreground;
   }
 }
 
 @layer utilities {
-  /* Textura sutil de papel. Se apaga sola en dark porque ahí no hay papel. */
+  /* Subtle paper texture. It turns itself off in dark mode, where there's no paper. */
   .paper {
     background-image: radial-gradient(
       oklch(0.19 0.008 110 / 3.5%) 0.5px,

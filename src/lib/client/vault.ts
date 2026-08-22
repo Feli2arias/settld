@@ -1,10 +1,9 @@
 /**
- * Guarda la seed de la wallet en el dispositivo del usuario y en ningún otro lado.
+ * Keeps the wallet seed on the user's device and nowhere else.
  *
- * ⚠️ Alcance del hackathon: la seed se guarda en localStorage en texto plano.
- * Es aceptable acá porque corremos sobre Sepolia con USD₮ de prueba, que no vale
- * nada. Para plata real esto tiene que pasar por una passphrase del usuario y
- * cifrado con WebCrypto antes de tocar el disco.
+ * ⚠️ Hackathon scope: the seed is stored in localStorage in plain text. That's acceptable
+ * here because we run on Sepolia with test USD₮, which is worth nothing. For real money
+ * this has to go through a user passphrase and WebCrypto encryption before touching disk.
  */
 
 const SEED_KEY = 'split.seed'
@@ -47,7 +46,7 @@ export function readSession (): StoredSession | null {
   }
 }
 
-/** Cierra sesión y borra la seed. Sin backup, la wallet se pierde: por eso avisamos. */
+/** Signs out and wipes the seed. Without a backup the wallet is lost: hence the warning. */
 export function forgetEverything (): void {
   if (!isBrowser()) return
   localStorage.removeItem(SEED_KEY)

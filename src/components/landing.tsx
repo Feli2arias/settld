@@ -8,15 +8,15 @@ import { motion } from 'motion/react'
 import { useSession } from '@/lib/client/use-session'
 
 /**
- * La landing.
+ * The landing page.
  *
- * A diferencia del resto de la app, esta página tiene colores fijos: no sigue el tema
- * del sistema. Una página de marca se ve igual siempre, como un afiche.
+ * Unlike the rest of the app, this page has fixed colours: it doesn't follow the system
+ * theme. A brand page looks the same always, like a poster.
  *
- * A quien ya tiene cuenta lo manda directo al inicio: nadie debería ver una pantalla
- * de marketing dos veces. Pero el markup se renderiza igual en el servidor —y no se
- * esconde mientras leemos la sesión— porque si no, quien comparte el link no obtiene
- * ningún preview y el primer pintado queda en blanco.
+ * Anyone who already has an account is sent straight to the home screen — nobody should
+ * see a marketing page twice. But the markup still renders on the server, and isn't
+ * hidden while we read the session, because otherwise whoever shares the link gets no
+ * preview and the first paint is blank.
  */
 
 const DIFFERENTIATORS = [
@@ -38,7 +38,7 @@ const DIFFERENTIATORS = [
   }
 ]
 
-/** Las personas del recibo de ejemplo. Es una maqueta: no sale de la base. */
+/** The people in the sample receipt. This is a mockup: none of it comes from the database. */
 const SAMPLE_SPLIT = [
   { initial: 'M', handle: '@mateo', amount: '$30', state: 'settled' as const },
   { initial: 'J', handle: '@julian', amount: '$30', state: 'owes' as const },

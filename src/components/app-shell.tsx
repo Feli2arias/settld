@@ -5,16 +5,16 @@ import { cn } from '@/lib/utils'
 // Contract: AppShell
 // Props: children (required), title?, backHref?, action? (ReactNode), width ('narrow'|'wide'), className?
 // Variants:
-//   - width="narrow" (default): tareas enfocadas — onboarding, cargar un gasto, pagar.
-//     En desktop se centra como una tarjeta en vez de estirarse.
-//   - width="wide": pantallas de contenido — home, grupo. En desktop usan el ancho disponible.
-// States: es estructural; los estados interactivos son del link de volver
-// Accessibility: <main> como landmark. El título es <h1> en desktop y una micro-etiqueta
-//   en la barra de mobile. El botón de volver es un link con aria-label.
+//   - width="narrow" (default): focused tasks — onboarding, adding an expense, paying.
+//     On desktop it centres as a card instead of stretching.
+//   - width="wide": content screens — home, group. On desktop they use the width available.
+// States: structural; the interactive states belong to the back link
+// Accessibility: <main> as a landmark. The title is an <h1> on desktop and a micro-label
+//   in the mobile bar. The back button is a link with an aria-label.
 // Responsive:
-//   - <lg: una sola columna de 28rem con barra superior pegajosa, pensada para el pulgar.
-//   - ≥lg: sin barra pegajosa, el título pasa a titular grande y el botón de volver
-//     desaparece porque la navegación vive en la barra lateral.
+//   - <lg: a single 28rem column with a sticky top bar, built for the thumb.
+//   - ≥lg: no sticky bar, the title becomes a large headline and the back button
+//     disappears because navigation lives in the sidebar.
 export function AppShell ({
   children,
   title,
@@ -51,7 +51,7 @@ export function AppShell ({
           {backHref && (
             <Link
               href={backHref}
-              aria-label="Volver"
+              aria-label="Back"
               className="-ml-2 flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none lg:hidden"
             >
               <ChevronLeft className="size-5" />

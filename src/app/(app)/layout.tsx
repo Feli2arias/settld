@@ -10,18 +10,18 @@ import { useGroups } from '@/lib/client/use-groups'
 import { useSession } from '@/lib/client/use-session'
 import { cn } from '@/lib/utils'
 
-// Contract: AppLayout (sidebar de escritorio)
+// Contract: AppLayout (desktop sidebar)
 // Props: children (required)
-// Variants: en mobile no existe — la navegación es la barra superior de cada pantalla.
-//   A partir de lg aparece una columna lateral fija con marca, grupos y usuario.
-// States: cada link de grupo tiene estado activo, hover y focus visible
-// Accessibility: <nav aria-label>, el grupo actual marcado con aria-current="page"
-// Responsive: oculta por debajo de lg (1024). Ancho fijo de 17rem, altura completa.
+// Variants: doesn't exist on mobile — navigation there is each screen's top bar.
+//   From lg up, a fixed side column appears with the wordmark, groups and user.
+// States: every group link has an active, hover and visible-focus state
+// Accessibility: <nav aria-label>, current group marked with aria-current="page"
+// Responsive: hidden below lg (1024). Fixed 17rem wide, full height.
 
 /**
- * Settld en el celular es una app de una sola columna que se maneja con el pulgar.
- * En una pantalla grande esa misma columna angosta en el medio de la nada se ve pobre,
- * así que acá el espacio de más se usa para dejar los grupos siempre a la vista.
+ * On a phone, Settld is a single-column app you drive with your thumb. On a big screen
+ * that same narrow column floating in the middle of nowhere looks poor, so here the
+ * extra space goes to keeping the groups permanently in view.
  */
 export default function AppLayout ({ children }: LayoutProps<'/'>) {
   const { session } = useSession()
@@ -38,8 +38,8 @@ export default function AppLayout ({ children }: LayoutProps<'/'>) {
           Settld.
         </Link>
 
-        <nav aria-label="Tus grupos" className="mt-10 flex-1 overflow-y-auto">
-          <p className="eyebrow mb-3">Grupos</p>
+        <nav aria-label="Your groups" className="mt-10 flex-1 overflow-y-auto">
+          <p className="eyebrow mb-3">Groups</p>
 
           <ul className="space-y-1">
             {groups?.map(group => {
@@ -64,13 +64,13 @@ export default function AppLayout ({ children }: LayoutProps<'/'>) {
           </ul>
 
           {groups?.length === 0 && (
-            <p className="px-4 text-sm text-muted-foreground">Todavía ninguno.</p>
+            <p className="px-4 text-sm text-muted-foreground">None yet.</p>
           )}
 
           <Button size="pill" variant="secondary" className="mt-4 w-full" asChild>
             <Link href="/groups/new">
               <Plus aria-hidden />
-              Nuevo grupo
+              New group
             </Link>
           </Button>
         </nav>
@@ -88,7 +88,7 @@ export default function AppLayout ({ children }: LayoutProps<'/'>) {
                   <span className="block truncate text-xs text-muted-foreground">@{session.username}</span>
                 </span>
                 <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-                <span className="sr-only">Abrir tu cuenta</span>
+                <span className="sr-only">Open your account</span>
               </button>
             </AccountDialog>
           </div>

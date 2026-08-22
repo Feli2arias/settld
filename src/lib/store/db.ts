@@ -1,22 +1,22 @@
 /**
- * Almacenamiento de Settld: usuarios, grupos, gastos y settlements.
+ * Settld's storage: users, groups, expenses and settlements.
  *
- * Acá NO viven seeds ni claves. Lo único que sabemos de una wallet es su address pública.
+ * No seeds or keys live here. The only thing we know about a wallet is its public address.
  *
- * Dónde se guardan los datos lo decide `backend.ts` según el entorno; este archivo
- * sólo describe las operaciones.
+ * Where the data is stored is decided by `backend.ts` based on the environment; this file
+ * only describes the operations.
  */
 
 import { randomUUID } from 'node:crypto'
 import type { EncryptedVault, Expense, Group, Settlement, SettlementStatus, StoredUser, User } from '@/lib/split/types'
 import { type Database, loadDatabase, saveDatabase } from './backend'
 
-/** Serializa las escrituras para que dos requests simultáneos no se pisen. */
+/** Serializes writes so two simultaneous requests do not clobber each other. */
 let queue: Promise<unknown> = Promise.resolve()
 
 const read = loadDatabase
 
-/** Aplica una mutación sobre el estado y devuelve lo que la mutación produjo. */
+/** Applies a mutation to the state and returns whatever the mutation produced. */
 function mutate<T> (fn: (db: Database) => T | Promise<T>): Promise<T> {
   const next = queue.then(async () => {
     const db = await loadDatabase()
@@ -25,7 +25,7 @@ function mutate<T> (fn: (db: Database) => T | Promise<T>): Promise<T> {
     return result
   })
 
-  queue = next.catch(() => {}) // una falla no debe trabar la cola
+  queue = next.catch(() => {}) // a failure must not jam the queue
   return next
 }
 
@@ -35,11 +35,11 @@ const normalizeUsername = (username: string) => username.trim().replace(/^@/, ''
 // --- Usuarios ---
 
 /**
- * Saca el vault antes de devolver un usuario.
+ * Strips the vault before returning a user.
  *
- * El vault está cifrado, pero igual no lo repartimos: cuanto menos circule, menos
- * chances de que alguien se lo lleve para probarle contraseñas tranquilo en su casa.
- * Se entrega sólo por `findVaultByUsername`, al iniciar sesión.
+ * The vault is encrypted, but we still don't hand it around: the less it circulates, the
+ * fewer chances someone walks off with it to try passwords against at their leisure. It
+ * is served only through `findVaultByUsername`, at sign-in.
  */
 const withoutVault = ({ vault: _vault, ...user }: StoredUser): User => user
 
@@ -53,16 +53,16 @@ export async function findUserByUsername (username: string): Promise<User | null
   return user ? withoutVault(user) : null
 }
 
-/** El bulto cifrado de una cuenta. Sin la contraseña del usuario no sirve de nada. */
+/** An account's encrypted bundle. Without the user's password it is worthless. */
 export async function findVaultByUsername (username: string): Promise<EncryptedVault | null> {
   const target = normalizeUsername(username)
   return (await read()).users.find(u => u.username === target)?.vault ?? null
 }
 
 /**
- * Busca por wallet address. Es lo que hace posible volver a entrar a una cuenta:
- * de la frase de recuperación sale la address, y de la address sale el usuario.
- * Comparamos en minúsculas porque el checksum de una address EVM es sólo cosmético.
+ * Looks up by wallet address. This is what makes signing back into an account possible:
+ * the recovery phrase yields the address, and the address yields the user. We compare in
+ * lowercase because the checksum on an EVM address is purely cosmetic.
  */
 export async function findUserByWalletAddress (address: string): Promise<User | null> {
   const target = address.toLowerCase()
@@ -77,7 +77,7 @@ export async function findUserById (id: string): Promise<User | null> {
 
 export class UsernameTakenError extends Error {
   constructor (username: string) {
-    super(`El usuario @${username} ya existe`)
+    super(`The username @${username} is already taken`)
     this.name = 'UsernameTakenError'
   }
 }
@@ -128,7 +128,7 @@ export async function findGroup (groupId: string): Promise<Group | null> {
   return (await read()).groups.find(g => g.id === groupId) ?? null
 }
 
-/** Todo lo que hace falta para pintar la pantalla de un grupo, en una sola lectura. */
+/** Everything needed to paint a group's screen, in a single read. */
 export interface GroupDetail {
   group: Group
   members: User[]

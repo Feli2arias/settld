@@ -1,6 +1,6 @@
 /**
- * Cliente de la API de Settld. Una sola función hace el fetch y desenvuelve la
- * respuesta, así ninguna pantalla tiene que acordarse de mirar `error`.
+ * Settld's API client. A single function does the fetch and unwraps the response, so no
+ * screen has to remember to check `error`.
  */
 
 import type { GroupDetail } from '@/lib/store/db'
@@ -19,10 +19,10 @@ async function request<T> (path: string, init?: RequestInit): Promise<T> {
     headers: init?.body ? { 'content-type': 'application/json' } : undefined
   })
 
-  const payload = await response.json().catch(() => ({ data: null, error: 'Respuesta inesperada del servidor' }))
+  const payload = await response.json().catch(() => ({ data: null, error: 'Unexpected response from the server' }))
 
   if (!response.ok || payload.error) {
-    throw new ApiError(payload.error ?? 'Algo salió mal', response.status)
+    throw new ApiError(payload.error ?? 'Something went wrong', response.status)
   }
 
   return payload.data as T
@@ -37,7 +37,7 @@ export const api = {
   lookupUser: (username: string) =>
     request<User | null>(`/api/users/lookup?username=${encodeURIComponent(username)}`),
 
-  /** Para volver a entrar: de la frase salió una address, acá averiguamos de quién es. */
+  /** For signing back in: the phrase produced an address, here we find out whose it is. */
   lookupUserByAddress: (address: string) =>
     request<User | null>(`/api/users/lookup?address=${encodeURIComponent(address)}`),
 
@@ -48,7 +48,7 @@ export const api = {
     vault: EncryptedVault
   }) => post<User>('/api/users', input),
 
-  /** El bulto cifrado de una cuenta, para intentar abrirlo con la contraseña. */
+  /** An account's encrypted bundle, to try opening it with the password. */
   getVault: (username: string) =>
     request<EncryptedVault | null>(`/api/users/vault?username=${encodeURIComponent(username)}`),
 

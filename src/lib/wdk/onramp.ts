@@ -1,26 +1,26 @@
 /**
- * Comprar saldo con tarjeta, usando el módulo de MoonPay de WDK.
+ * Buying balance with a card, using WDK's MoonPay module.
  *
- * MoonPay no mueve la plata desde acá: `buy()` arma la URL del widget y el usuario
- * completa la compra ahí, con su tarjeta, como en cualquier checkout. Los fondos
- * caen directo en su wallet.
+ * MoonPay doesn't move the money from here: `buy()` assembles the widget URL and the user
+ * completes the purchase there, with their card, like any checkout. The funds land
+ * straight in their wallet.
  *
- * Le pasamos el tema de Settld para que el widget no se sienta una app ajena.
+ * We pass Settld's theme through so the widget doesn't feel like somebody else's app.
  */
 
 import { MOONPAY_API_KEY, MOONPAY_ASSET, MOONPAY_ENVIRONMENT, WDK_CONFIG } from './config'
 
-/** El on-ramp sólo se ofrece si hay clave configurada. */
+/** The on-ramp is only offered when a key is configured. */
 export const isOnrampAvailable = () => Boolean(MOONPAY_API_KEY)
 
 /**
- * Arma la URL del checkout para una address.
+ * Builds the checkout URL for an address.
  *
- * Usa una cuenta de sólo lectura a propósito: para generar un link de compra alcanza
- * con saber a dónde mandar los fondos, no hace falta abrir la wallet del usuario.
+ * Uses a read-only account on purpose: generating a purchase link only requires knowing
+ * where to send the funds, there's no need to open the user's wallet.
  */
 export async function buildBuyUrl (address: string, amountCents: number): Promise<string> {
-  if (!MOONPAY_API_KEY) throw new Error('El pago con tarjeta no está configurado')
+  if (!MOONPAY_API_KEY) throw new Error('Card payments are not configured')
 
   const [{ WalletAccountReadOnlyEvm }, { default: MoonPayProtocol }] = await Promise.all([
     import('@tetherto/wdk-wallet-evm'),

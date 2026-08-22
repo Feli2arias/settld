@@ -28,7 +28,7 @@ export default function NewExpensePage ({ params }: PageProps<'/groups/[id]/expe
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Por defecto: lo pagó quien está usando la app, y se divide entre todos.
+  // Default: whoever is using the app paid, and it splits between everyone.
   useEffect(() => {
     if (!detail || !session || paidBy) return
     setPaidBy(session.userId)
@@ -37,8 +37,8 @@ export default function NewExpensePage ({ params }: PageProps<'/groups/[id]/expe
 
   if (!session || !detail) {
     return (
-      <AppShell title="Nuevo gasto" backHref={`/groups/${id}`}>
-        <p className="pt-8 text-sm text-muted-foreground">Cargando…</p>
+      <AppShell title="New expense" backHref={`/groups/${id}`}>
+        <p className="pt-8 text-sm text-muted-foreground">Loading…</p>
       </AppShell>
     )
   }
@@ -71,16 +71,16 @@ export default function NewExpensePage ({ params }: PageProps<'/groups/[id]/expe
       await api.createExpense({ groupId: id, description, amountCents, paidBy, splitBetween })
       router.replace(`/groups/${id}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No pudimos guardar el gasto')
+      setError(err instanceof Error ? err.message : "We couldn't save the expense")
       setSaving(false)
     }
   }
 
   return (
-    <AppShell title="Nuevo gasto" backHref={`/groups/${id}`}>
+    <AppShell title="New expense" backHref={`/groups/${id}`}>
       <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-7 pt-4">
         <div className="space-y-2.5">
-          <Label htmlFor="description" className="eyebrow">¿Qué fue?</Label>
+          <Label htmlFor="description" className="eyebrow">What was it?</Label>
           <Input
             id="description"
             value={description}
@@ -92,7 +92,7 @@ export default function NewExpensePage ({ params }: PageProps<'/groups/[id]/expe
         </div>
 
         <div className="space-y-2.5">
-          <Label htmlFor="amount" className="eyebrow">Monto</Label>
+          <Label htmlFor="amount" className="eyebrow">Amount</Label>
           <div className="relative">
             <span
               aria-hidden
@@ -112,7 +112,7 @@ export default function NewExpensePage ({ params }: PageProps<'/groups/[id]/expe
         </div>
 
         <fieldset className="space-y-3">
-          <legend className="eyebrow mb-3">Quién pagó</legend>
+          <legend className="eyebrow mb-3">Who paid</legend>
           <div className="flex flex-wrap gap-2">
             {detail.members.map(member => {
               const selected = paidBy === member.id
@@ -128,7 +128,7 @@ export default function NewExpensePage ({ params }: PageProps<'/groups/[id]/expe
                   )}
                 >
                   <PersonAvatar user={member} size="sm" />
-                  {member.id === session.userId ? 'Vos' : member.name}
+                  {member.id === session.userId ? 'You' : member.name}
                 </button>
               )
             })}
@@ -136,7 +136,7 @@ export default function NewExpensePage ({ params }: PageProps<'/groups/[id]/expe
         </fieldset>
 
         <fieldset className="space-y-3">
-          <legend className="eyebrow mb-3">Entre quiénes se divide</legend>
+          <legend className="eyebrow mb-3">Split between</legend>
           <ul className="space-y-2">
             {detail.members.map(member => {
               const index = splitBetween.indexOf(member.id)
@@ -155,7 +155,7 @@ export default function NewExpensePage ({ params }: PageProps<'/groups/[id]/expe
                   >
                     <PersonAvatar user={member} size="sm" />
                     <span className="flex-1 truncate text-sm font-bold">
-                      {member.id === session.userId ? 'Vos' : member.name}
+                      {member.id === session.userId ? 'You' : member.name}
                     </span>
 
                     {selected && shares[index] !== undefined && (
@@ -179,7 +179,7 @@ export default function NewExpensePage ({ params }: PageProps<'/groups/[id]/expe
 
           {shares.length > 0 && (
             <p className="pt-1 text-sm font-semibold text-muted-foreground">
-              {formatMoney(shares[0])} cada uno
+              {formatMoney(shares[0])} each
             </p>
           )}
         </fieldset>
@@ -193,7 +193,7 @@ export default function NewExpensePage ({ params }: PageProps<'/groups/[id]/expe
         <div className="mt-auto pt-8">
           <Button type="submit" size="pill-lg" disabled={!canSubmit || saving}>
             {saving && <Loader2 className="animate-spin" aria-hidden />}
-            Agregar gasto
+            Add expense
           </Button>
         </div>
       </form>

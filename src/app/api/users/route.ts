@@ -9,11 +9,11 @@ export const POST = (request: NextRequest) => handle(async () => {
   const body = await request.json()
 
   return createUser({
-    name: requireString(body.name, 'el nombre', { max: 60 }),
+    name: requireString(body.name, 'the name', { max: 60 }),
     username: requireUsername(body.username),
-    // La wallet la crea el browser: acá sólo recibimos y validamos la address pública.
+    // The browser creates the wallet: here we only receive and validate the public address.
     walletAddress: requireWalletAddress(body.walletAddress),
-    // Y el bulto cifrado con su contraseña, que el servidor no puede abrir.
+    // And the bundle encrypted with their password, which the server cannot open.
     vault: requireVault(body.vault)
   })
 })

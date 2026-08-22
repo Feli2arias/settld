@@ -4,19 +4,19 @@ import { handle } from '@/lib/store/respond'
 import { requirePositiveCents, requireString } from '@/lib/store/validate'
 
 /**
- * Registra un pago recién enviado a la red, en estado `pending`.
+ * Records a payment just sent to the network, in `pending` state.
  *
- * El pago se ejecuta desde la wallet del usuario en el browser; el servidor sólo anota
- * que ocurrió. Hasta que se confirme on-chain, la deuda sigue contando como impaga.
+ * The payment executes from the user's wallet in the browser; the server only notes that
+ * it happened. Until it confirms on-chain, the debt still counts as unpaid.
  */
 export const POST = (request: NextRequest) => handle(async () => {
   const body = await request.json()
 
   return createSettlement({
-    groupId: requireString(body.groupId, 'el grupo'),
-    from: requireString(body.from, 'quién paga'),
-    to: requireString(body.to, 'a quién le paga'),
-    amountCents: requirePositiveCents(body.amountCents, 'el monto'),
-    userOpHash: requireString(body.userOpHash, 'el hash de la operación', { max: 80 })
+    groupId: requireString(body.groupId, 'the group'),
+    from: requireString(body.from, 'who is paying'),
+    to: requireString(body.to, 'who they are paying'),
+    amountCents: requirePositiveCents(body.amountCents, 'the amount'),
+    userOpHash: requireString(body.userOpHash, 'the operation hash', { max: 80 })
   })
 })

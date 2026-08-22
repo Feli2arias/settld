@@ -5,36 +5,35 @@ import { USDT_ADDRESS, WDK_CONFIG } from '@/lib/wdk/config'
 import { centsToTokenUnits } from '@/lib/wdk/money'
 
 /**
- * El botón "Cargar saldo".
+ * The "test funds" option behind the Add money button.
  *
- * En una app real esto sería un on-ramp de fiat. Acá corremos sobre testnet, así que
- * Settld tiene una cuenta de tesorería cargada desde un faucet que le manda USD₮ de
- * prueba a quien lo pide. Es lo que permite que cualquiera abra la app y tenga saldo
- * sin pasar por un faucet con captcha.
+ * In a real app this would be a fiat on-ramp. We run on a testnet, so Settld keeps a
+ * treasury account topped up from a faucet that sends test USD₮ to whoever asks. It's
+ * what lets anyone open the app and have a balance without going through a captcha faucet.
  *
- * Sólo existe en testnet. Si algún día esto va a mainnet, esta ruta se borra.
+ * Testnet only. If this ever goes to mainnet, this route gets deleted.
  */
 
 export const runtime = 'nodejs'
 
 /**
- * Mandar la transferencia y esperar que confirme puede tardar bastante más que un
- * request normal. Sin este margen, la función se cortaría a mitad de camino.
+ * Sending the transfer and waiting for confirmation can take far longer than a normal
+ * request. Without this headroom, the function would be cut off halfway.
  */
 export const maxDuration = 60
 
-const GRANT_CENTS = 5_000 // $50 de prueba por pedido: alcanza de sobra y el treasury rinde el doble
+const GRANT_CENTS = 5_000 // $50 of test money per request: plenty, and the treasury lasts twice as long
 
 export async function POST (request: NextRequest) {
   const seedPhrase = process.env.TREASURY_SEED_PHRASE
 
   if (!seedPhrase) {
-    return fail('La tesorería no está configurada. Falta TREASURY_SEED_PHRASE.', 503)
+    return fail('The treasury is not configured. TREASURY_SEED_PHRASE is missing.', 503)
   }
 
   return handle(async () => {
     const body = await request.json()
-    const recipient = requireWalletAddress(body.address, 'la wallet')
+    const recipient = requireWalletAddress(body.address, 'the wallet')
 
     const { default: WalletManagerEvmErc4337 } = await import('@tetherto/wdk-wallet-evm-erc-4337')
     const wallet = new WalletManagerEvmErc4337(seedPhrase, WDK_CONFIG)
@@ -45,14 +44,14 @@ export async function POST (request: NextRequest) {
 
       const available = await account.getTokenBalance(USDT_ADDRESS)
       if (available < amount) {
-        throw new Error('La tesorería se quedó sin USD₮ de prueba')
+        throw new Error('The treasury has run out of test USD₮')
       }
 
       const result = await account.transfer({ token: USDT_ADDRESS, recipient, amount })
 
-      // Esperar la confirmación es deseable, pero no es motivo para reportar un error:
-      // una vez que la transferencia salió, la plata está en camino aunque el bundler
-      // público nos deje colgados con un rate limit.
+      // Waiting for confirmation is desirable, but it is no reason to report an error:
+      // once the transfer is out, the money is on its way even if the public bundler
+      // leaves us hanging with a rate limit.
       await account
         .waitForTransaction(result.hash, { target: 'confirmed', timeout: 90_000 })
         .catch(() => null)

@@ -5,6 +5,6 @@ export const GET = async (_request: Request, { params }: { params: Promise<{ id:
   const { id } = await params
   const detail = await getGroupDetail(id)
 
-  if (!detail) return fail('No encontramos ese grupo', 404)
+  if (!detail) return fail("We couldn't find that group", 404)
   return handle(async () => detail)
 }

@@ -10,11 +10,11 @@ type SessionState =
   | { status: 'ready', session: StoredSession }
 
 /**
- * Lee la sesión guardada en el dispositivo.
+ * Reads the session saved on the device.
  *
- * Arranca en 'loading' a propósito: la sesión vive en localStorage, así que en el
- * primer render del servidor todavía no existe. Sin ese estado intermedio la app
- * parpadearía mostrando la pantalla de bienvenida a alguien que ya tiene cuenta.
+ * It starts at 'loading' on purpose: the session lives in localStorage, so on the first
+ * server render it doesn't exist yet. Without that in-between state the app would flash
+ * the welcome screen at someone who already has an account.
  */
 export function useSession (): SessionState {
   const [state, setState] = useState<SessionState>({ status: 'loading', session: null })
@@ -27,7 +27,7 @@ export function useSession (): SessionState {
   return state
 }
 
-/** Igual que useSession, pero manda al onboarding a quien no tenga cuenta. */
+/** Same as useSession, but sends anyone without an account to onboarding. */
 export function useRequireSession (): StoredSession | null {
   const state = useSession()
   const router = useRouter()

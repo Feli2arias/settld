@@ -21,7 +21,7 @@ export default function GroupPage ({ params }: PageProps<'/groups/[id]'>) {
 
   if (error) {
     return (
-      <AppShell title="Grupo" backHref="/home">
+      <AppShell title="Group" backHref="/home">
         <p role="alert" className="mt-8 rounded-2xl bg-debit-surface px-4 py-3 text-sm font-semibold text-debit">
           {error}
         </p>
@@ -31,8 +31,8 @@ export default function GroupPage ({ params }: PageProps<'/groups/[id]'>) {
 
   if (!detail) {
     return (
-      <AppShell title="Grupo" backHref="/home">
-        <p className="pt-8 text-sm text-muted-foreground">Cargando…</p>
+      <AppShell title="Group" backHref="/home">
+        <p className="pt-8 text-sm text-muted-foreground">Loading…</p>
       </AppShell>
     )
   }
@@ -42,7 +42,7 @@ export default function GroupPage ({ params }: PageProps<'/groups/[id]'>) {
   const balances = computeNetBalances(expenses, settlements)
   const totalCents = expenses.reduce((sum, expense) => sum + expense.amountCents, 0)
 
-  /** Lo que todavía falta mover para que el grupo quede en cero. */
+  /** What still has to move for the group to reach zero. */
   const outstandingCents = Object.values(balances)
     .filter(value => value > 0)
     .reduce((sum, value) => sum + value, 0)
@@ -51,7 +51,7 @@ export default function GroupPage ({ params }: PageProps<'/groups/[id]'>) {
     .filter(s => s.status === 'confirmed')
     .reduce((sum, s) => sum + s.amountCents, 0)
 
-  /** Todo lo que alguna vez hubo que saldar: lo que ya se pagó más lo que falta. */
+  /** Everything that ever had to be settled: what was paid plus what is left. */
   const debtCents = settledCents + outstandingCents
   const everyoneSettled = expenses.length > 0 && outstandingCents === 0
 
@@ -67,31 +67,31 @@ export default function GroupPage ({ params }: PageProps<'/groups/[id]'>) {
       <div className="contents lg:flex lg:flex-col lg:gap-8">
       {everyoneSettled && (
         <p className="mt-4 rounded-3xl bg-credit-surface px-5 py-4 text-center font-heading text-lg font-extrabold text-credit motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-500">
-          Todos saldados 🎉
+          Everyone is settled 🎉
         </p>
       )}
 
       <section aria-labelledby="your-balance" className={everyoneSettled ? undefined : 'pt-4'}>
         <p id="your-balance" className="eyebrow mb-3">
-          {plan.isSettled ? 'Tu balance' : plan.netCents > 0 ? 'Te deben' : 'Debés'}
+          {plan.isSettled ? 'Your balance' : plan.netCents > 0 ? 'You are owed' : 'You owe'}
         </p>
 
         {plan.isSettled
           ? (
               <p className="font-heading text-4xl font-extrabold text-credit">
-                Estás al día ✓
+                You're all settled ✓
               </p>
             )
           : <Amount cents={Math.abs(plan.netCents)} size="hero" tone={plan.netCents > 0 ? 'credit' : 'debit'} />}
 
         <p className="mt-4 text-sm text-muted-foreground">
-          {formatMoney(totalCents)} gastados entre {group.memberIds.length} personas
+          {formatMoney(totalCents)} spent between {group.memberIds.length} people
         </p>
 
         {plan.owes.length > 0 && (
           <div className="mt-6">
             <Button size="pill-lg" asChild>
-              <Link href={`/groups/${group.id}/settle`}>Saldar mi deuda</Link>
+              <Link href={`/groups/${group.id}/settle`}>Settle up</Link>
             </Button>
           </div>
         )}
@@ -99,7 +99,7 @@ export default function GroupPage ({ params }: PageProps<'/groups/[id]'>) {
 
       {plan.owed.length > 0 && (
         <section aria-labelledby="owed-label">
-          <p id="owed-label" className="eyebrow mb-3">Te tienen que pagar</p>
+          <p id="owed-label" className="eyebrow mb-3">They owe you</p>
           <ul className="space-y-2">
             {plan.owed.map(payment => {
               const person = memberOf(detail, payment.from)
@@ -122,10 +122,10 @@ export default function GroupPage ({ params }: PageProps<'/groups/[id]'>) {
       <div className="contents lg:flex lg:flex-col lg:gap-6">
       <section aria-labelledby="expenses-label" className="flex-1">
         <div className="mb-3 flex items-baseline justify-between">
-          <p id="expenses-label" className="eyebrow">Gastos</p>
+          <p id="expenses-label" className="eyebrow">Expenses</p>
           {debtCents > 0 && (
             <p className="text-xs font-semibold text-muted-foreground">
-              {formatMoney(settledCents)} / {formatMoney(debtCents)} saldado
+              {formatMoney(settledCents)} / {formatMoney(debtCents)} settled
             </p>
           )}
         </div>
@@ -133,9 +133,9 @@ export default function GroupPage ({ params }: PageProps<'/groups/[id]'>) {
         {expenses.length === 0
           ? (
               <div className="rounded-3xl border border-dashed border-border px-6 py-10 text-center">
-                <p className="font-heading text-lg font-bold">Todavía no hay gastos</p>
+                <p className="font-heading text-lg font-bold">No expenses yet</p>
                 <p className="mt-1.5 text-sm text-muted-foreground">
-                  Cargá el primero y Settld calcula el resto.
+                  Add the first one and Settld works out the rest.
                 </p>
               </div>
             )
@@ -155,14 +155,14 @@ export default function GroupPage ({ params }: PageProps<'/groups/[id]'>) {
                       </div>
 
                       <p className="mt-1 text-xs font-semibold text-muted-foreground">
-                        Pagó {payer.id === session.userId ? 'vos' : payer.name}
+                        Paid by {payer.id === session.userId ? 'you' : payer.name}
                       </p>
 
                       <ul className="mt-3 space-y-1.5 border-t border-border pt-3">
                         {expense.splitBetween.map((userId, index) => {
                           const person = memberOf(detail, userId)
                           const isPayer = userId === expense.paidBy
-                          // Nadie debe nada si su balance en el grupo no es negativo.
+                          // Nobody owes anything if their balance in the group isn't negative.
                           const isSettled = (balances[userId] ?? 0) >= 0
 
                           return (
@@ -173,10 +173,10 @@ export default function GroupPage ({ params }: PageProps<'/groups/[id]'>) {
                                 {formatMoney(shares[index])}
                               </span>
                               {isPayer
-                                ? <span className="text-xs font-bold text-credit">pagó</span>
+                                ? <span className="text-xs font-bold text-credit">paid</span>
                                 : isSettled
-                                  ? <span className="text-xs font-bold text-credit">✓&nbsp;saldado</span>
-                                  : <span className="text-xs font-bold text-debit">debe</span>}
+                                  ? <span className="text-xs font-bold text-credit">✓&nbsp;settled</span>
+                                  : <span className="text-xs font-bold text-debit">owes</span>}
                             </li>
                           )
                         })}
@@ -191,7 +191,7 @@ export default function GroupPage ({ params }: PageProps<'/groups/[id]'>) {
       <Button size="pill-lg" variant={expenses.length === 0 ? 'default' : 'secondary'} asChild>
         <Link href={`/groups/${group.id}/expenses/new`}>
           <Plus aria-hidden />
-          Agregar gasto
+          Add expense
         </Link>
       </Button>
       </div>

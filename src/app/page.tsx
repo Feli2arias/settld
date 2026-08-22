@@ -2,21 +2,21 @@ import type { Metadata } from 'next'
 import { Landing } from '@/components/landing'
 
 /**
- * La landing es lo único que ve alguien que todavía no usa Settld, así que es la
- * página que más importa que se renderice en el servidor: es la que se comparte,
- * la que indexan los buscadores y la que aparece en el preview de un link.
+ * The landing page is all that someone who doesn't use Settld yet ever sees, which
+ * makes it the page that most needs to render on the server: it's the one people
+ * share, the one search engines index, and the one that shows up in link previews.
  *
- * Por eso esta página es un componente de servidor que sólo declara los metadatos
- * y monta la landing; la interactividad vive adentro.
+ * That's why this is a server component that only declares metadata and mounts the
+ * landing; the interactivity lives inside.
  */
 export const metadata: Metadata = {
   title: 'Settld — Split expenses. Settle instantly.',
   description:
-    'Otras apps te dicen quién te debe y ahí se quedan. Settld calcula y ejecuta el pago en USD₮ directo desde tu wallet.',
+    'Other apps tell you who owes you and stop there. Settld calculates and executes the payment in USD₮ directly from your wallet.',
   openGraph: {
     title: 'Settld — Split expenses. Settle instantly.',
     description:
-      'Otras apps te dicen quién te debe y ahí se quedan. Settld calcula y ejecuta el pago en USD₮ directo desde tu wallet.',
+      'Other apps tell you who owes you and stop there. Settld calculates and executes the payment in USD₮ directly from your wallet.',
     type: 'website'
   }
 }

@@ -1,16 +1,15 @@
 /**
- * De dónde salen y a dónde van los datos de Settld.
+ * Where Settld's data comes from and goes to.
  *
- * Hay dos implementaciones y se elige sola según el entorno:
+ * There are two implementations and the environment picks one on its own:
  *
- * - **Archivo** (`.data/split.json`): el default para desarrollo local. Cero setup,
- *   sobrevive reinicios y no depende de ningún servicio externo.
- * - **Redis**: la que se usa en Vercel, donde el filesystem es de sólo lectura.
- *   Habla el API REST de Upstash con `fetch` pelado, así que no suma dependencias.
+ * - **File** (`.data/split.json`): the default for local development. Zero setup,
+ *   survives restarts and depends on no external service.
+ * - **Redis**: what runs on Vercel, where the filesystem is read-only. Speaks Upstash's
+ *   REST API with bare `fetch`, so it adds no dependencies.
  *
- * Se descartó Vercel Blob a propósito: su caché de CDN tiene un mínimo de 60 segundos,
- * y una app donde el gasto que acabás de cargar tarda un minuto en aparecerle al otro
- * no sirve.
+ * Vercel Blob was ruled out deliberately: its CDN cache has a 60-second minimum, and an
+ * app where the expense you just added takes a minute to reach the other person is useless.
  */
 
 import fs from 'node:fs/promises'
@@ -30,8 +29,8 @@ const KEY = 'split:db'
 const FILE = path.join(process.cwd(), '.data', 'split.json')
 
 /**
- * La integración de Upstash en Vercel inyecta las variables con dos nombres distintos
- * según cuándo se creó el recurso, así que aceptamos los dos.
+ * Vercel's Upstash integration injects the variables under two different names depending
+ * on when the resource was created, so we accept both.
  */
 function redisCredentials (): { url: string, token: string } | null {
   const url = process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL
@@ -44,7 +43,7 @@ export const backendName = () => (redisCredentials() ? 'redis' : 'file')
 
 async function redisCommand (command: unknown[]): Promise<unknown> {
   const credentials = redisCredentials()
-  if (!credentials) throw new Error('Redis no está configurado')
+  if (!credentials) throw new Error('Redis is not configured')
 
   const response = await fetch(credentials.url, {
     method: 'POST',
@@ -56,7 +55,7 @@ async function redisCommand (command: unknown[]): Promise<unknown> {
     cache: 'no-store'
   })
 
-  if (!response.ok) throw new Error(`Redis respondió ${response.status}`)
+  if (!response.ok) throw new Error(`Redis answered ${response.status}`)
 
   const payload = await response.json()
   if (payload.error) throw new Error(payload.error)

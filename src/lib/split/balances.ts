@@ -1,16 +1,16 @@
 /**
- * El cerebro de Settld: a partir de los gastos de un grupo, calcula quién le debe a quién
- * y cuál es el conjunto más chico de transferencias que deja a todos en cero.
+ * Settld's brain: from a group's expenses, works out who owes whom and what the smallest
+ * set of transfers is that leaves everyone at zero.
  *
- * Todo acá es una función pura sobre enteros. No hay blockchain, no hay red, no hay estado:
- * Settld decide QUIÉN le paga a QUIÉN, y recién después WDK ejecuta esos pagos.
+ * Everything here is a pure function over integers. No blockchain, no network, no state:
+ * Settld decides WHO pays WHOM, and only then does WDK execute those payments.
  */
 
 import type { Expense, Payment, Settlement } from './types'
 
 /**
- * Divide un monto en partes iguales sin perder ni inventar centavos.
- * El sobrante se reparte de a un centavo entre los primeros participantes.
+ * Splits an amount evenly without losing or inventing cents.
+ * The remainder is handed out one cent at a time to the first participants.
  */
 export function splitEqually (amountCents: number, participants: number): number[] {
   if (participants <= 0) return []
@@ -22,11 +22,11 @@ export function splitEqually (amountCents: number, participants: number): number
 }
 
 /**
- * Balance neto de cada persona, en centavos.
- * Positivo = le deben plata. Negativo = debe plata. La suma total siempre da cero.
+ * Each person's net balance, in cents.
+ * Positive = they are owed money. Negative = they owe money. The total always sums to zero.
  *
- * Sólo descuenta los settlements confirmados en la blockchain: mientras una transferencia
- * está pendiente o falló, la deuda sigue viva.
+ * Only settlements confirmed on the blockchain count: while a transfer is pending or has
+ * failed, the debt is still alive.
  */
 export function computeNetBalances (expenses: Expense[], settlements: Settlement[]): Record<string, number> {
   const balances: Record<string, number> = {}
@@ -51,17 +51,17 @@ export function computeNetBalances (expenses: Expense[], settlements: Settlement
 }
 
 /**
- * Reduce los balances netos al conjunto mínimo de transferencias que salda el grupo.
+ * Reduces the net balances to the minimum set of transfers that settles the group.
  *
- * Es el clásico greedy de "el que más debe le paga al que más le deben": va emparejando
- * al deudor más grande con el acreedor más grande hasta que alguno de los dos queda en cero.
- * Cada paso liquida al menos a una persona, así que nunca hacen falta más de N-1 pagos.
+ * It's the classic greedy "biggest debtor pays biggest creditor": it pairs the largest
+ * debtor with the largest creditor until one of them hits zero. Every step clears at
+ * least one person, so it never needs more than N-1 payments.
  */
 export function whoOwesWho (expenses: Expense[], settlements: Settlement[]): Payment[] {
   const balances = computeNetBalances(expenses, settlements)
 
-  // Los ordenamos por monto —de mayor a menor en valor absoluto— y desempatamos
-  // alfabéticamente por id, para que el mismo grupo produzca siempre el mismo plan.
+  // Sorted by amount — largest absolute value first — with ties broken alphabetically
+  // by id, so the same group always produces the same plan.
   type Entry = [string, number]
   const entries = Object.entries(balances)
 
@@ -95,20 +95,20 @@ export function whoOwesWho (expenses: Expense[], settlements: Settlement[]): Pay
 }
 
 export interface SettlementPlan {
-  /** Balance del usuario en centavos: positivo si le deben, negativo si debe. */
+  /** The user's balance in cents: positive if they are owed, negative if they owe. */
   netCents: number
-  /** Transferencias que el usuario tiene que hacer desde su propia wallet. */
+  /** Transfers the user has to make from their own wallet. */
   owes: Payment[]
-  /** Transferencias que otros le tienen que hacer a él. */
+  /** Transfers other people have to make to them. */
   owed: Payment[]
   isSettled: boolean
 }
 
 /**
- * El plan visto desde los ojos de una persona. Es lo que alimenta la pantalla de Settle Up.
+ * The plan seen through one person's eyes. This is what feeds the settle-up screen.
  *
- * Importante: cada usuario sólo confirma las transferencias que salen de SU wallet.
- * Settld nunca ejecuta un pago en nombre de otro.
+ * Important: each user only ever confirms transfers leaving THEIR wallet. Settld never
+ * executes a payment on somebody else's behalf.
  */
 export function settlementPlan (expenses: Expense[], settlements: Settlement[], userId: string): SettlementPlan {
   const netCents = computeNetBalances(expenses, settlements)[userId] ?? 0

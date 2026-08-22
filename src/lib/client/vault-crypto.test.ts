@@ -3,49 +3,49 @@ import { WrongPasswordError, decryptSeed, encryptSeed } from './vault-crypto'
 
 const SEED = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
 
-describe('cifrado de la wallet con contraseña', () => {
-  it('lo que se cifra con una contraseña se abre con esa contraseña', async () => {
-    const vault = await encryptSeed(SEED, 'una contraseña larga')
-    expect(await decryptSeed(vault, 'una contraseña larga')).toBe(SEED)
+describe('encrypting the wallet with a password', () => {
+  it('what is encrypted with a password opens with that password', async () => {
+    const vault = await encryptSeed(SEED, 'a nice long password')
+    expect(await decryptSeed(vault, 'a nice long password')).toBe(SEED)
   })
 
-  it('la frase no queda a la vista en el bulto cifrado', async () => {
-    const vault = await encryptSeed(SEED, 'una contraseña larga')
+  it('the phrase is not visible inside the encrypted bundle', async () => {
+    const vault = await encryptSeed(SEED, 'a nice long password')
     const serialized = JSON.stringify(vault)
 
     expect(serialized).not.toContain('abandon')
-    expect(serialized).not.toContain('una contraseña larga')
+    expect(serialized).not.toContain('a nice long password')
   })
 
-  it('con la contraseña equivocada falla en vez de devolver basura', async () => {
-    const vault = await encryptSeed(SEED, 'la correcta')
-    await expect(decryptSeed(vault, 'la incorrecta')).rejects.toThrow(WrongPasswordError)
+  it('fails with the wrong password instead of returning garbage', async () => {
+    const vault = await encryptSeed(SEED, 'the right one')
+    await expect(decryptSeed(vault, 'the wrong one')).rejects.toThrow(WrongPasswordError)
   })
 
-  it('la misma frase y contraseña dan bultos distintos cada vez', async () => {
+  it('the same phrase and password produce a different bundle every time', async () => {
     const [a, b] = await Promise.all([
-      encryptSeed(SEED, 'misma contraseña'),
-      encryptSeed(SEED, 'misma contraseña')
+      encryptSeed(SEED, 'same password'),
+      encryptSeed(SEED, 'same password')
     ])
 
-    // Sal e IV nuevos en cada cifrado: dos cuentas con la misma contraseña no se
-    // parecen en nada, y nadie puede deducir que comparten clave.
+    // Fresh salt and IV on every encryption: two accounts with the same password look
+    // nothing alike, and nobody can tell they share a key.
     expect(a.salt).not.toBe(b.salt)
     expect(a.iv).not.toBe(b.iv)
     expect(a.cipher).not.toBe(b.cipher)
 
-    expect(await decryptSeed(b, 'misma contraseña')).toBe(SEED)
+    expect(await decryptSeed(b, 'same password')).toBe(SEED)
   })
 
-  it('un bulto manipulado no se abre', async () => {
-    const vault = await encryptSeed(SEED, 'la correcta')
+  it('a tampered bundle does not open', async () => {
+    const vault = await encryptSeed(SEED, 'the right one')
     const tampered = { ...vault, cipher: `A${vault.cipher.slice(1)}` }
 
-    await expect(decryptSeed(tampered, 'la correcta')).rejects.toThrow(WrongPasswordError)
+    await expect(decryptSeed(tampered, 'the right one')).rejects.toThrow(WrongPasswordError)
   })
 
-  it('estira la contraseña lo suficiente como para que probar a lo bruto duela', async () => {
-    const vault = await encryptSeed(SEED, 'una contraseña larga')
+  it('stretches the password enough that brute-forcing hurts', async () => {
+    const vault = await encryptSeed(SEED, 'a nice long password')
     expect(vault.iterations).toBeGreaterThanOrEqual(300_000)
   })
 })

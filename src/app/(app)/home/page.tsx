@@ -21,10 +21,10 @@ interface GroupSummary {
 
 const greeting = () => {
   const hour = new Date().getHours()
-  if (hour < 6) return 'Buenas noches'
-  if (hour < 13) return 'Buen día'
-  if (hour < 20) return 'Buenas tardes'
-  return 'Buenas noches'
+  if (hour < 6) return 'Good evening'
+  if (hour < 13) return 'Good morning'
+  if (hour < 20) return 'Good afternoon'
+  return 'Good evening'
 }
 
 export default function HomePage () {
@@ -32,7 +32,7 @@ export default function HomePage () {
   const [balanceCents, setBalanceCents] = useState<number | null>(null)
   const [summaries, setSummaries] = useState<GroupSummary[] | null>(null)
 
-  /** El saldo sale de la blockchain, no de nuestra base de datos. */
+  /** The balance comes from the blockchain, not from our database. */
   const refreshBalance = useCallback(async (address: string) => {
     try {
       setBalanceCents(await getBalanceCentsOf(address))
@@ -79,13 +79,13 @@ export default function HomePage () {
           >
             {greeting()}, {session.name.split(' ')[0]}
             <ChevronDown className="size-4" aria-hidden />
-            <span className="sr-only">Abrir tu cuenta</span>
+            <span className="sr-only">Open your account</span>
           </button>
         </AccountDialog>
       </header>
 
       <section aria-labelledby="balance-label">
-        <p id="balance-label" className="eyebrow mb-3">Tu saldo</p>
+        <p id="balance-label" className="eyebrow mb-3">Your balance</p>
         {balanceCents === null
           ? <span className="amount block text-[3.75rem] text-muted-foreground sm:text-[4.5rem]">···</span>
           : <Amount cents={balanceCents} size="hero" />}
@@ -97,24 +97,24 @@ export default function HomePage () {
           >
             <Button size="pill">
               <ArrowDownLeft aria-hidden />
-              Cargar saldo
+              Add money
             </Button>
           </AddMoneyDialog>
         </div>
       </section>
 
       <section aria-labelledby="groups-label" className="flex-1">
-        <p id="groups-label" className="eyebrow mb-3">Tus grupos</p>
+        <p id="groups-label" className="eyebrow mb-3">Your groups</p>
 
         {summaries === null && (
-          <p className="py-6 text-sm text-muted-foreground">Cargando…</p>
+          <p className="py-6 text-sm text-muted-foreground">Loading…</p>
         )}
 
         {summaries?.length === 0 && (
           <div className="rounded-3xl border border-dashed border-border px-6 py-10 text-center">
-            <p className="font-heading text-lg font-bold">Todavía no tenés grupos</p>
+            <p className="font-heading text-lg font-bold">No groups yet</p>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              Creá uno para empezar a dividir gastos.
+              Create one to start splitting expenses.
             </p>
           </div>
         )}
@@ -130,8 +130,8 @@ export default function HomePage () {
                   <span className="block truncate font-heading text-lg font-bold">{group.name}</span>
                   <span className="mt-0.5 block text-xs font-semibold text-muted-foreground">
                     {netCents === 0
-                      ? 'Estás al día'
-                      : netCents > 0 ? 'Te deben' : 'Debés'}
+                      ? "You're all settled"
+                      : netCents > 0 ? 'You are owed' : 'You owe'}
                   </span>
                 </span>
 
@@ -144,11 +144,11 @@ export default function HomePage () {
         </ul>
       </section>
 
-      {/* En desktop este botón ya vive en la barra lateral. */}
+      {/* On desktop this button already lives in the sidebar. */}
       <Button size="pill-lg" variant="secondary" className="lg:hidden" asChild>
         <Link href="/groups/new">
           <Plus aria-hidden />
-          Nuevo grupo
+          New group
         </Link>
       </Button>
     </AppShell>

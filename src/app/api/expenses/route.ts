@@ -6,21 +6,21 @@ import { ValidationError, requirePositiveCents, requireString, requireStringArra
 export const POST = (request: NextRequest) => handle(async () => {
   const body = await request.json()
 
-  const groupId = requireString(body.groupId, 'el grupo')
-  const paidBy = requireString(body.paidBy, 'quién pagó')
-  const splitBetween = requireStringArray(body.splitBetween, 'entre quiénes se divide')
+  const groupId = requireString(body.groupId, 'the group')
+  const paidBy = requireString(body.paidBy, 'who paid')
+  const splitBetween = requireStringArray(body.splitBetween, 'who it is split between')
 
-  // Un gasto sólo tiene sentido si todos los involucrados están en el grupo.
+  // An expense only makes sense if everyone involved is in the group.
   const group = await findGroup(groupId)
-  if (!group) throw new ValidationError('No encontramos ese grupo')
+  if (!group) throw new ValidationError("We couldn't find that group")
 
   const outsiders = [paidBy, ...splitBetween].filter(id => !group.memberIds.includes(id))
-  if (outsiders.length > 0) throw new ValidationError('Hay alguien que no es miembro del grupo')
+  if (outsiders.length > 0) throw new ValidationError('Someone here is not a member of the group')
 
   return createExpense({
     groupId,
-    description: requireString(body.description, 'la descripción', { max: 80 }),
-    amountCents: requirePositiveCents(body.amountCents, 'el monto'),
+    description: requireString(body.description, 'the description', { max: 80 }),
+    amountCents: requirePositiveCents(body.amountCents, 'the amount'),
     paidBy,
     splitBetween
   })

@@ -1,6 +1,6 @@
 /**
- * Envoltorio único para las respuestas de la API, así el cliente siempre recibe
- * la misma forma y los errores nunca se escapan como stack traces.
+ * A single wrapper for API responses, so the client always receives the same shape
+ * and errors never escape as stack traces.
  */
 
 import { NextResponse } from 'next/server'
@@ -18,7 +18,7 @@ export const ok = <T> (data: T, status = 200) =>
 export const fail = (error: string, status: number) =>
   NextResponse.json<ApiResponse<never>>({ data: null, error }, { status })
 
-/** Corre un handler y traduce cualquier excepción a una respuesta que el usuario entienda. */
+/** Runs a handler and translates any exception into a response the user can understand. */
 export async function handle<T> (fn: () => Promise<T>): Promise<NextResponse> {
   try {
     return ok(await fn())
@@ -27,6 +27,6 @@ export async function handle<T> (fn: () => Promise<T>): Promise<NextResponse> {
     if (error instanceof UsernameTakenError) return fail(error.message, 409)
 
     console.error('[api]', error)
-    return fail('Algo salió mal. Probá de nuevo.', 500)
+    return fail('Something went wrong. Try again.', 500)
   }
 }

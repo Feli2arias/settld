@@ -30,11 +30,11 @@ export default function NewGroupPage () {
     if (!username || !session) return
 
     if (username === session.username) {
-      setError('Ya estás en el grupo')
+      setError("You're already in the group")
       return
     }
     if (members.some(member => member.username === username)) {
-      setError(`@${username} ya está en la lista`)
+      setError(`@${username} is already on the list`)
       return
     }
 
@@ -44,13 +44,13 @@ export default function NewGroupPage () {
     try {
       const user = await api.lookupUser(username)
       if (!user) {
-        setError(`No encontramos a @${username}`)
+        setError(`We couldn't find @${username}`)
         return
       }
       setMembers(current => [...current, user])
       setUsernameInput('')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No pudimos buscar ese usuario')
+      setError(err instanceof Error ? err.message : "We couldn't look up that user")
     } finally {
       setLooking(false)
     }
@@ -71,7 +71,7 @@ export default function NewGroupPage () {
       })
       router.replace(`/groups/${group.id}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No pudimos crear el grupo')
+      setError(err instanceof Error ? err.message : "We couldn't create the group")
       setCreating(false)
     }
   }
@@ -79,9 +79,9 @@ export default function NewGroupPage () {
   if (!session) return null
 
   return (
-    <AppShell title="Nuevo grupo" backHref="/home" className="gap-7">
+    <AppShell title="New group" backHref="/home" className="gap-7">
       <div className="space-y-2.5 pt-4">
-        <Label htmlFor="group-name" className="eyebrow">Nombre del grupo</Label>
+        <Label htmlFor="group-name" className="eyebrow">Group name</Label>
         <Input
           id="group-name"
           value={name}
@@ -93,7 +93,7 @@ export default function NewGroupPage () {
       </div>
 
       <div className="space-y-3">
-        <Label htmlFor="member" className="eyebrow">Sumar gente</Label>
+        <Label htmlFor="member" className="eyebrow">Add people</Label>
 
         <form onSubmit={handleAddMember} className="flex gap-2">
           <div className="relative flex-1">
@@ -115,7 +115,7 @@ export default function NewGroupPage () {
           </div>
           <Button type="submit" size="pill" variant="secondary" disabled={looking || !usernameInput.trim()}>
             {looking ? <Loader2 className="animate-spin" aria-hidden /> : <Check aria-hidden />}
-            Sumar
+            Add
           </Button>
         </form>
 
@@ -123,7 +123,7 @@ export default function NewGroupPage () {
           <li className="flex items-center gap-3 rounded-2xl bg-secondary px-4 py-3">
             <PersonAvatar user={session} size="sm" />
             <span className="flex-1 text-sm font-bold">{session.name}</span>
-            <span className="text-xs font-semibold text-muted-foreground">vos</span>
+            <span className="text-xs font-semibold text-muted-foreground">you</span>
           </li>
 
           {members.map(member => (
@@ -136,7 +136,7 @@ export default function NewGroupPage () {
               <button
                 type="button"
                 onClick={() => removeMember(member.id)}
-                aria-label={`Sacar a ${member.name} del grupo`}
+                aria-label={`Remove ${member.name} from the group`}
                 className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
               >
                 <X className="size-4" aria-hidden />
@@ -155,7 +155,7 @@ export default function NewGroupPage () {
       <div className="mt-auto pt-8">
         <Button size="pill-lg" onClick={handleCreate} disabled={!name.trim() || creating}>
           {creating && <Loader2 className="animate-spin" aria-hidden />}
-          Crear grupo
+          Create group
         </Button>
       </div>
     </AppShell>

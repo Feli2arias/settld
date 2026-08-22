@@ -1,20 +1,20 @@
 /**
- * Modelo de datos de Settld.
+ * Settld's data model.
  *
- * Todos los montos viven en "centavos" (enteros) para no arrastrar errores de punto
- * flotante al repartir un gasto. USD₮ tiene 6 decimales on-chain, así que la conversión
- * a unidades de token es `cents * 10_000`.
+ * Every amount lives in "cents" (integers) so splitting an expense never drags floating
+ * point errors along. USD₮ has 6 decimals on-chain, so converting to token units is
+ * `cents * 10_000`.
  */
 
 export const CENTS_PER_UNIT = 100
 export const TOKEN_UNITS_PER_CENT = 10_000
 
 /**
- * La wallet cifrada con la contraseña del usuario.
+ * The wallet encrypted with the user's password.
  *
- * Es lo único que Settld guarda de las claves, y sin la contraseña —que nunca llega
- * al servidor— no se puede abrir. Por eso nunca viaja junto al resto del usuario:
- * se pide aparte, sólo al iniciar sesión.
+ * It is the only thing Settld keeps of the keys, and without the password — which never
+ * reaches the server — it cannot be opened. That's why it never travels alongside the
+ * rest of the user: it is requested separately, only at sign-in.
  */
 export interface EncryptedVault {
   cipher: string
@@ -27,11 +27,11 @@ export interface User {
   id: string
   name: string
   username: string
-  /** Address de la smart account de WDK. La derivamos en el browser al crear la cuenta. */
+  /** The WDK smart account address. We derive it in the browser when the account is created. */
   walletAddress: string
 }
 
-/** El usuario tal como se guarda. El vault no sale de acá salvo al iniciar sesión. */
+/** The user as stored. The vault never leaves here except at sign-in. */
 export interface StoredUser extends User {
   vault?: EncryptedVault
 }
@@ -47,7 +47,7 @@ export interface Expense {
   id: string
   groupId: string
   description: string
-  /** Monto total en centavos. */
+  /** Total amount in cents. */
   amountCents: number
   paidBy: string
   splitBetween: string[]
@@ -63,14 +63,14 @@ export interface Settlement {
   to: string
   amountCents: number
   status: SettlementStatus
-  /** Hash de la UserOperation que devuelve WDK. */
+  /** The UserOperation hash WDK returns. */
   userOpHash?: string
-  /** Hash de la transacción real en la blockchain, resuelto contra el bundler. */
+  /** The real transaction hash on the blockchain, resolved from the EntryPoint event. */
   txHash?: string
   createdAt: string
 }
 
-/** Una transferencia que alguien tiene que hacer para saldar sus cuentas. */
+/** A transfer somebody has to make to settle their share. */
 export interface Payment {
   from: string
   to: string
