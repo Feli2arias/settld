@@ -1,54 +1,27 @@
 /**
- * Almacenamiento de Split.
- *
- * Guarda usuarios, grupos, gastos y settlements en un JSON en disco. Es deliberadamente
- * simple: el estado compartido no es donde está la gracia del proyecto, y así el demo
- * corre sin depender de ningún servicio externo.
+ * Almacenamiento de Split: usuarios, grupos, gastos y settlements.
  *
  * Acá NO viven seeds ni claves. Lo único que sabemos de una wallet es su address pública.
  *
- * Para deployar a Vercel hay que cambiar este adaptador por Supabase; la interfaz que
- * usa el resto de la app son las funciones exportadas de abajo, así que el cambio queda
- * contenido en este archivo.
+ * Dónde se guardan los datos lo decide `backend.ts` según el entorno; este archivo
+ * sólo describe las operaciones.
  */
 
 import { randomUUID } from 'node:crypto'
-import fs from 'node:fs/promises'
-import path from 'node:path'
 import type { Expense, Group, Settlement, SettlementStatus, User } from '@/lib/split/types'
+import { type Database, loadDatabase, saveDatabase } from './backend'
 
-interface Database {
-  users: User[]
-  groups: Group[]
-  expenses: Expense[]
-  settlements: Settlement[]
-}
-
-const EMPTY: Database = { users: [], groups: [], expenses: [], settlements: [] }
-const DB_PATH = path.join(process.cwd(), '.data', 'split.json')
-
-/** Serializa las escrituras para que dos requests simultáneos no se pisen el archivo. */
+/** Serializa las escrituras para que dos requests simultáneos no se pisen. */
 let queue: Promise<unknown> = Promise.resolve()
 
-async function read (): Promise<Database> {
-  try {
-    return { ...EMPTY, ...JSON.parse(await fs.readFile(DB_PATH, 'utf8')) }
-  } catch {
-    return { ...EMPTY }
-  }
-}
-
-async function write (db: Database): Promise<void> {
-  await fs.mkdir(path.dirname(DB_PATH), { recursive: true })
-  await fs.writeFile(DB_PATH, JSON.stringify(db, null, 2))
-}
+const read = loadDatabase
 
 /** Aplica una mutación sobre el estado y devuelve lo que la mutación produjo. */
 function mutate<T> (fn: (db: Database) => T | Promise<T>): Promise<T> {
   const next = queue.then(async () => {
-    const db = await read()
+    const db = await loadDatabase()
     const result = await fn(db)
-    await write(db)
+    await saveDatabase(db)
     return result
   })
 

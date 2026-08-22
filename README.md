@@ -32,6 +32,18 @@ Opcional pero **muy recomendado para demostrar en vivo** (ver *Riesgos conocidos
 NEXT_PUBLIC_BUNDLER_URL="https://api.pimlico.io/v2/11155111/rpc?apikey=TU_API_KEY"
 ```
 
+### Dónde se guardan los datos
+
+Se elige solo según el entorno, en `src/lib/store/backend.ts`:
+
+- **Local**: un JSON en `.data/split.json`. Cero setup.
+- **Vercel**: Redis (Upstash), porque en serverless el filesystem es de sólo lectura.
+  Se activa apenas existen `KV_REST_API_URL` y `KV_REST_API_TOKEN`, que la integración
+  de Vercel inyecta sola. Habla el API REST con `fetch` pelado, sin dependencias nuevas.
+
+Ojo: si corrés local con esas variables presentes, vas a estar escribiendo en la misma
+base que producción.
+
 Otros comandos:
 
 ```bash
@@ -88,7 +100,7 @@ estado de los pagos       receipt
 |---|---|
 | `src/lib/split/` | El cerebro: balances netos y settlement mínimo. Funciones puras, con tests. |
 | `src/lib/wdk/` | Todo lo que toca la blockchain: wallet, montos, receipts, config de red. |
-| `src/lib/store/` | Persistencia y validación de entrada. |
+| `src/lib/store/` | Persistencia y validación de entrada. `backend.ts` elige dónde guardar. |
 | `src/lib/client/` | Sesión, seed local y cliente de la API. |
 | `src/app/` | Pantallas y rutas de API. |
 
@@ -166,9 +178,11 @@ esperar la confirmación, así que queda rastro aunque el usuario cierre la app.
 Sepolia con USD₮ de prueba, que no vale nada. Para plata real hay que pedirle una
 passphrase al usuario y cifrar con WebCrypto antes de tocar el disco.
 
-**Los datos viven en un JSON local** (`.data/split.json`). Alcanza para el demo y no depende
-de ningún servicio externo. Para deployar a Vercel hay que cambiar el adaptador de
-`src/lib/store/db.ts` por Supabase; el resto de la app no se entera.
+**El almacenamiento no tiene transacciones.** Cada mutación es leer → modificar → escribir
+todo el estado. Con dos o tres personas haciendo cosas de a una alcanza de sobra, pero dos
+escrituras exactamente simultáneas desde instancias distintas podrían pisarse. Si el proyecto
+sigue después del hackathon, esto es lo primero que hay que cambiar por una base con
+transacciones de verdad.
 
 ---
 
