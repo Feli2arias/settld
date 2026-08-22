@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Bricolage_Grotesque, Manrope } from 'next/font/google'
+import { Bricolage_Grotesque, Caveat, Manrope } from 'next/font/google'
 import './globals.css'
 
 /**
@@ -17,6 +17,16 @@ const body = Manrope({
   variable: '--font-body',
   subsets: ['latin'],
   weight: ['500', '600', '700']
+})
+
+/**
+ * Caveat for the handwritten annotations on the landing page — the note scribbled on the
+ * receipt, the circled label. It never appears inside the app itself.
+ */
+const hand = Caveat({
+  variable: '--font-hand',
+  subsets: ['latin'],
+  weight: ['600', '700']
 })
 
 export const metadata: Metadata = {
@@ -44,7 +54,11 @@ const THEME_SCRIPT = `try{
 
 export default function RootLayout ({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} h-full antialiased`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${display.variable} ${body.variable} ${hand.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
