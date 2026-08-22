@@ -17,6 +17,12 @@ import { centsToTokenUnits } from '@/lib/wdk/money'
 
 export const runtime = 'nodejs'
 
+/**
+ * Mandar la transferencia y esperar que confirme puede tardar bastante más que un
+ * request normal. Sin este margen, la función se cortaría a mitad de camino.
+ */
+export const maxDuration = 60
+
 const GRANT_CENTS = 5_000 // $50 de prueba por pedido: alcanza de sobra y el treasury rinde el doble
 
 export async function POST (request: NextRequest) {
