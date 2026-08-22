@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Expense, Settlement, User } from './types'
-import { type GroupDetailLike, buildDashboard, formatWhen, groupActivity, memberShares } from './dashboard'
+import type { ActivityItem } from './dashboard'
+import { type GroupDetailLike, allActivity, buildDashboard, dayLabel, formatWhen, groupActivity, groupByDay, memberShares } from './dashboard'
 
 const user = (id: string, name: string): User => ({
   id,
@@ -181,17 +182,81 @@ describe('buildDashboard', () => {
   })
 })
 
-describe('formatWhen', () => {
+describe('allActivity', () => {
+  it('merges every group into one history, newest first, keeping the group name', () => {
+    const trip: GroupDetailLike = {
+      group: { id: 'g2', name: 'Road trip', memberIds: ['felipe', 'sofia'], createdAt: '2026-08-02T00:00:00Z' },
+      members: [felipe, sofia],
+      expenses: [expense({ id: 'e2', groupId: 'g2', description: 'Gas', amountCents: 4000, paidBy: 'sofia', splitBetween: ['felipe', 'sofia'], createdAt: '2026-08-22T08:00:00Z' })],
+      settlements: []
+    }
+
+    const items = allActivity([dinner(), trip], 'felipe')
+
+    expect(items.map(i => i.groupName)).toEqual(['Road trip', 'Friday dinner'])
+    expect(items).toHaveLength(2)
+  })
+
+  it('carries the transaction hash so a payment can link to its receipt', () => {
+    const detail = dinner({
+      settlements: [settlement({ from: 'felipe', to: 'daniel', amountCents: 3000, txHash: '0xabc' })]
+    })
+
+    expect(allActivity([detail], 'felipe')[0].txHash).toBe('0xabc')
+  })
+})
+
+describe('groupByDay', () => {
+  const now = new Date(2026, 7, 22, 12, 0)
+
+  const at = (date: Date): ActivityItem => ({
+    id: date.toISOString(),
+    kind: 'expense',
+    title: 'x',
+    groupId: 'g1',
+    groupName: 'Friday dinner',
+    status: null,
+    txHash: null,
+    at: date.toISOString()
+  })
+
+  it('keeps the order and puts everything from one day under one heading', () => {
+    const days = groupByDay([
+      at(new Date(2026, 7, 22, 19, 0)),
+      at(new Date(2026, 7, 22, 9, 0)),
+      at(new Date(2026, 7, 21, 9, 0))
+    ], now)
+
+    expect(days.map(d => [d.label, d.items.length])).toEqual([['Today', 2], ['Yesterday', 1]])
+  })
+
+  it('starts a new heading when the day comes back around', () => {
+    const days = groupByDay([at(new Date(2026, 7, 22, 19, 0)), at(new Date(2026, 7, 21, 9, 0)), at(new Date(2026, 7, 22, 1, 0))], now)
+    expect(days).toHaveLength(3)
+  })
+
+  it('returns nothing for an empty history', () => {
+    expect(groupByDay([], now)).toEqual([])
+  })
+})
+
+describe('dayLabel and formatWhen', () => {
   const now = new Date(2026, 7, 22, 12, 0)
 
   it('says today and yesterday instead of a date', () => {
+    expect(dayLabel(new Date(2026, 7, 22, 19, 42).toISOString(), now)).toBe('Today')
+    expect(dayLabel(new Date(2026, 7, 21, 9, 5).toISOString(), now)).toBe('Yesterday')
     expect(formatWhen(new Date(2026, 7, 22, 19, 42).toISOString(), now)).toMatch(/^Today /)
-    expect(formatWhen(new Date(2026, 7, 21, 9, 5).toISOString(), now)).toMatch(/^Yesterday /)
   })
 
   it('falls back to a plain date once it is older than that', () => {
     const label = formatWhen(new Date(2026, 7, 12, 9, 5).toISOString(), now)
     expect(label).not.toMatch(/Today|Yesterday/)
     expect(label).toContain('12')
+  })
+
+  it('adds the year only when it is not the current one', () => {
+    expect(dayLabel(new Date(2025, 7, 12).toISOString(), now)).toContain('2025')
+    expect(dayLabel(new Date(2026, 7, 12).toISOString(), now)).not.toContain('2026')
   })
 })

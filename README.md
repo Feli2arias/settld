@@ -114,7 +114,7 @@ It isn't one screen stretched: they're two different layouts sharing the same co
 
 | | mobile (<768) | tablet (768–1023) | desktop (≥1024) |
 |---|---|---|---|
-| Navigation | sticky top bar with a back button | same | fixed sidebar: where to go, the groups, and you |
+| Navigation | bottom tab bar on the four main screens, a top bar with a back button everywhere else | same | fixed sidebar: where to go, the groups, and you |
 | Width | a single 28rem column, built for the thumb | 42rem–48rem | up to 72rem, left-aligned next to the sidebar |
 | Landing | headline and buttons stacked | same | headline left, a look at the product right |
 | Dashboard | one stack of cards; the group status rides with the member count | three figures across, then the stack | same as tablet until 1280, where it opens into two columns: groups and activity left, the group that needs you and the month right |
@@ -124,6 +124,24 @@ It isn't one screen stretched: they're two different layouts sharing the same co
 The trick that avoids duplicating the group markup is `display: contents`: on mobile the
 column containers disappear and everything falls into a single column; from `lg` up they
 become flex and build the two columns.
+
+### The four screens
+
+Everything hangs off four places you can always get back to — the tab bar on a phone, the
+rail on a desktop. Each one answers a different question, which is why each one exists:
+
+| | Answers |
+|---|---|
+| **Dashboard** | What's still open, and what do I do about it |
+| **Groups** | Which group do I have to chase — who's in it, what went through it, who's short |
+| **Activity** | Did that payment actually go through, and when |
+| **Settings** | Who am I, how do people pay me, and how do I get back in if I lose this device |
+
+Activity is the only screen that links out to the public explorer. That's on purpose: it's
+where somebody goes to check that the money really moved, and the receipt is the proof.
+
+Adding money stays a dialog rather than becoming a fifth screen — you come back to whatever
+you were doing, and half of it happens inside somebody else's checkout.
 
 ### The dashboard
 
@@ -195,9 +213,9 @@ The way out is encrypting the wallet with the password, on the device:
 The result: you sign in with a username and password like any app, and the keys stay the
 user's.
 
-**The recovery phrase is the fallback**, for when the password is forgotten. It's one tap
-away, by tapping your name on the home screen, alongside your address and the sign-out
-button. We don't show it to anyone at signup: that would ruin the moment of walking in.
+**The recovery phrase is the fallback**, for when the password is forgotten. It lives in
+Settings, alongside your address and the sign-out button. We don't show it to anyone at
+signup: that would ruin the moment of walking in.
 
 Details that matter:
 

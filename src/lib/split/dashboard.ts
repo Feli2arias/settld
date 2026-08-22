@@ -40,7 +40,10 @@ export interface ActivityItem {
   /** Already written out for the reader, amount included. */
   title: string
   groupId: string
+  groupName: string
   status: Settlement['status'] | null
+  /** Only a settlement has one, and only once it is on chain. */
+  txHash: string | null
   at: string
 }
 
@@ -129,7 +132,9 @@ export function groupActivity (detail: GroupDetailLike, userId: string): Activit
       ? `You added ${expense.description}`
       : `${nameOf(expense.paidBy)} added ${expense.description}`,
     groupId: detail.group.id,
+    groupName: detail.group.name,
     status: null,
+    txHash: null,
     at: expense.createdAt
   }))
 
@@ -143,10 +148,47 @@ export function groupActivity (detail: GroupDetailLike, userId: string): Activit
           ? ['received', `${nameOf(settlement.from)} paid you ${money}`]
           : ['other', `${nameOf(settlement.from)} paid ${nameOf(settlement.to)} ${money}`]
 
-    return { id: settlement.id, kind, title, groupId: detail.group.id, status: settlement.status, at: settlement.createdAt }
+    return {
+      id: settlement.id,
+      kind,
+      title,
+      groupId: detail.group.id,
+      groupName: detail.group.name,
+      status: settlement.status,
+      txHash: settlement.txHash ?? null,
+      at: settlement.createdAt
+    }
   })
 
   return [...expenses, ...settlements].sort(byNewestFirst)
+}
+
+/** Every event in every group, newest first. The activity screen shows all of it. */
+export function allActivity (details: GroupDetailLike[], userId: string): ActivityItem[] {
+  return details.flatMap(detail => groupActivity(detail, userId)).sort(byNewestFirst)
+}
+
+export interface ActivityDay {
+  label: string
+  items: ActivityItem[]
+}
+
+/**
+ * Splits a history into days, because a flat list of forty rows is a wall. The order is
+ * preserved, so the days come out newest first just like the items.
+ */
+export function groupByDay (items: ActivityItem[], now: Date = new Date()): ActivityDay[] {
+  const days: ActivityDay[] = []
+
+  for (const item of items) {
+    const label = dayLabel(item.at, now)
+    const last = days[days.length - 1]
+
+    if (last?.label === label) last.items.push(item)
+    else days.push({ label, items: [item] })
+  }
+
+  return days
 }
 
 const sameMonth = (iso: string, now: Date) => {
@@ -240,21 +282,32 @@ function pickFocus (details: GroupDetailLike[], cards: GroupCard[], userId: stri
 }
 
 /**
- * When something happened, the way a person would say it: "Today 7:42 PM", "Yesterday
- * 3:10 PM", "Aug 12". Nobody wants to read an ISO timestamp.
+ * The day something happened, the way a person would say it: "Today", "Yesterday",
+ * "August 12". Nobody wants to read an ISO timestamp.
  */
-export function formatWhen (iso: string, now: Date = new Date()): string {
+export function dayLabel (iso: string, now: Date = new Date()): string {
   const date = new Date(iso)
-  const time = date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
-
   const days = Math.round(
     (startOfDay(now).getTime() - startOfDay(date).getTime()) / 86_400_000
   )
 
-  if (days === 0) return `Today ${time}`
-  if (days === 1) return `Yesterday ${time}`
+  if (days === 0) return 'Today'
+  if (days === 1) return 'Yesterday'
 
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  return date.toLocaleDateString(undefined, {
+    month: 'long',
+    day: 'numeric',
+    year: date.getFullYear() === now.getFullYear() ? undefined : 'numeric'
+  })
+}
+
+export const timeLabel = (iso: string) =>
+  new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+
+/** Day and time together, for the short list on the dashboard. */
+export function formatWhen (iso: string, now: Date = new Date()): string {
+  const day = dayLabel(iso, now)
+  return day === 'Today' || day === 'Yesterday' ? `${day} ${timeLabel(iso)}` : day
 }
 
 const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate())

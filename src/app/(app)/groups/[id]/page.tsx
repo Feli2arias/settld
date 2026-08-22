@@ -21,7 +21,7 @@ export default function GroupPage ({ params }: PageProps<'/groups/[id]'>) {
 
   if (error) {
     return (
-      <AppShell title="Group" backHref="/home">
+      <AppShell title="Group" backHref="/groups">
         <p role="alert" className="mt-8 rounded-2xl bg-debit-surface px-4 py-3 text-sm font-semibold text-debit">
           {error}
         </p>
@@ -31,7 +31,7 @@ export default function GroupPage ({ params }: PageProps<'/groups/[id]'>) {
 
   if (!detail) {
     return (
-      <AppShell title="Group" backHref="/home">
+      <AppShell title="Group" backHref="/groups">
         <p className="pt-8 text-sm text-muted-foreground">Loading…</p>
       </AppShell>
     )
@@ -58,7 +58,7 @@ export default function GroupPage ({ params }: PageProps<'/groups/[id]'>) {
   return (
     <AppShell
       title={group.name}
-      backHref="/home"
+      backHref="/groups"
       width="wide"
       // On desktop the summary and the expenses are seen at once, in two columns. On
       // mobile the wrappers use `display: contents` and everything falls into one column.

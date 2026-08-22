@@ -79,7 +79,7 @@ export default function NewGroupPage () {
   if (!session) return null
 
   return (
-    <AppShell title="New group" backHref="/home" className="gap-7">
+    <AppShell title="New group" backHref="/groups" className="gap-7">
       <div className="space-y-2.5 pt-4">
         <Label htmlFor="group-name" className="eyebrow">Group name</Label>
         <Input

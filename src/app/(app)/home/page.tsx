@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowDownLeft, ArrowUpRight, ChevronDown, CreditCard, Plus, Wallet } from 'lucide-react'
-import { AccountDialog } from '@/components/account-dialog'
+import { ArrowDownLeft, ArrowUpRight, ChevronRight, CreditCard, Plus, Wallet } from 'lucide-react'
 import { AddMoneyDialog } from '@/components/add-money-dialog'
 import { AppShell } from '@/components/app-shell'
 import { RecentActivity } from '@/components/dashboard/activity-list'
@@ -13,9 +12,9 @@ import { MonthCard } from '@/components/dashboard/month-card'
 import { Panel } from '@/components/dashboard/panel'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { Button } from '@/components/ui/button'
-import { api } from '@/lib/client/api'
+import { useGroupDetails } from '@/lib/client/use-group-details'
 import { useRequireSession } from '@/lib/client/use-session'
-import { type Dashboard, buildDashboard } from '@/lib/split/dashboard'
+import { buildDashboard } from '@/lib/split/dashboard'
 import { getBalanceCentsOf } from '@/lib/wdk/wallet'
 
 /**
@@ -24,8 +23,8 @@ import { getBalanceCentsOf } from '@/lib/wdk/wallet'
  * Every other screen in Settld looks at one thing at a time: a group, an expense, a
  * payment. This one is the only place that answers the question you actually open the app
  * with — what is still open, and what do I do about it. So it leads with the three numbers
- * that matter (owed to you, owed by you, what you can spend) and then puts the group that
- * needs you next to the list of everything else.
+ * that matter (what you can spend, what you owe, what you're owed) and then puts the group
+ * that needs you next to the list of everything else.
  *
  * It's the widest layout in the app: two columns of cards on desktop, a single stack on a
  * phone. Nothing here is decorative — every figure is derived from real groups by
@@ -45,8 +44,8 @@ const plural = (count: number, one: string, many: string) =>
 
 export default function HomePage () {
   const session = useRequireSession()
+  const details = useGroupDetails(session?.userId)
   const [balanceCents, setBalanceCents] = useState<number | null>(null)
-  const [board, setBoard] = useState<Dashboard | null>(null)
 
   /** The balance comes from the blockchain, not from our database. */
   const refreshBalance = useCallback(async (address: string) => {
@@ -62,21 +61,9 @@ export default function HomePage () {
     void refreshBalance(session.walletAddress)
   }, [session, refreshBalance])
 
-  useEffect(() => {
-    if (!session) return
-
-    let cancelled = false
-
-    void (async () => {
-      const groups = await api.listGroups(session.userId)
-      const details = await Promise.all(groups.map(group => api.getGroup(group.id)))
-      if (!cancelled) setBoard(buildDashboard(details, session.userId))
-    })()
-
-    return () => { cancelled = true }
-  }, [session])
-
   if (!session) return null
+
+  const board = details ? buildDashboard(details, session.userId) : null
 
   // "Add expense" needs a group. Whichever one is under the spotlight is the one you were
   // most likely about to touch; with no groups at all, the button creates the first one.
@@ -88,18 +75,16 @@ export default function HomePage () {
     <AppShell width="full" className="gap-4 lg:gap-5">
       <header className="flex flex-wrap items-end justify-between gap-4 pt-4 lg:pt-0">
         <div className="min-w-0 flex-1 basis-96">
-          <AccountDialog session={session}>
-            <button
-              type="button"
-              className="-ml-2 flex max-w-full items-center gap-2 rounded-2xl px-2 py-1 text-left transition-colors hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-            >
-              <span className="truncate font-heading text-2xl font-extrabold tracking-[-0.035em] sm:text-3xl xl:text-4xl">
-                {greeting()}, {session.name.split(' ')[0]}
-              </span>
-              <ChevronDown className="size-5 shrink-0 text-muted-foreground" aria-hidden />
-              <span className="sr-only">Open your account</span>
-            </button>
-          </AccountDialog>
+          <Link
+            href="/settings"
+            className="-ml-2 flex max-w-full items-center gap-2 rounded-2xl px-2 py-1 text-left transition-colors hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          >
+            <span className="truncate font-heading text-2xl font-extrabold tracking-[-0.035em] sm:text-3xl xl:text-4xl">
+              {greeting()}, {session.name.split(' ')[0]}
+            </span>
+            <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+            <span className="sr-only">Open your settings</span>
+          </Link>
 
           <p className="mt-1 text-sm font-semibold text-muted-foreground">
             Here&rsquo;s what&rsquo;s still open.
@@ -128,15 +113,10 @@ export default function HomePage () {
 
       <section aria-label="Your money" className="grid gap-4 md:grid-cols-3">
         <StatCard
-          label="You are owed"
-          cents={board?.owedToYouCents ?? null}
-          caption={
-            !board || board.peopleOwingYou === 0
-              ? 'Nobody owes you right now'
-              : `${plural(board.peopleOwingYou, 'friend owes', 'friends owe')} you`
-          }
-          icon={Wallet}
-          tone="credit"
+          label="Available balance"
+          cents={balanceCents}
+          caption="Ready to use"
+          icon={CreditCard}
         />
 
         <StatCard
@@ -152,10 +132,15 @@ export default function HomePage () {
         />
 
         <StatCard
-          label="Available balance"
-          cents={balanceCents}
-          caption="Ready to use"
-          icon={CreditCard}
+          label="You are owed"
+          cents={board?.owedToYouCents ?? null}
+          caption={
+            !board || board.peopleOwingYou === 0
+              ? 'Nobody owes you right now'
+              : `${plural(board.peopleOwingYou, 'friend owes', 'friends owe')} you`
+          }
+          icon={Wallet}
+          tone="credit"
         />
       </section>
 
