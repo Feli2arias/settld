@@ -9,7 +9,9 @@ import type { LucideIcon } from 'lucide-react'
 // States: loading (cents === null shows a placeholder) | ready
 // Accessibility: the label is a real <p> tied to the amount by proximity, and the tone is
 //   never the only carrier of meaning — the label already says "owed" or "owe".
-// Responsive: one per row on mobile, three across from md up
+// Responsive: one per row on mobile, three across from md up. Between md and xl the three
+//   cards are narrow enough that the icon disc would start squeezing the caption, so it is
+//   only drawn where there is room for it.
 
 const TONES = {
   credit: { amount: 'credit', disc: 'bg-credit-surface text-credit' },
@@ -45,7 +47,7 @@ export function StatCard ({
           <p className="mt-2 truncate text-xs font-semibold text-muted-foreground">{caption}</p>
         </div>
 
-        <span aria-hidden className={cn('flex size-11 shrink-0 items-center justify-center rounded-full', disc)}>
+        <span aria-hidden className={cn('flex size-11 shrink-0 items-center justify-center rounded-full md:hidden xl:flex', disc)}>
           <Icon className="size-5" strokeWidth={2} />
         </span>
       </div>

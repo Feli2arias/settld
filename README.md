@@ -117,7 +117,7 @@ It isn't one screen stretched: they're two different layouts sharing the same co
 | Navigation | sticky top bar with a back button | same | fixed sidebar: where to go, the groups, and you |
 | Width | a single 28rem column, built for the thumb | 42rem–48rem | up to 72rem, left-aligned next to the sidebar |
 | Landing | headline and buttons stacked | same | headline left, a look at the product right |
-| Dashboard | one stack of cards; the group status rides with the member count | three figures across, then the stack | two columns of cards: groups and activity left, the group that needs you and the month right |
+| Dashboard | one stack of cards; the group status rides with the member count | three figures across, then the stack | same as tablet until 1280, where it opens into two columns: groups and activity left, the group that needs you and the month right |
 | Group | everything in one column | same | two columns: summary and debts left, expenses right |
 | Forms | full screen, button at the bottom | same | vertically centred card |
 
