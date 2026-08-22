@@ -37,6 +37,10 @@ export const api = {
   lookupUser: (username: string) =>
     request<User | null>(`/api/users/lookup?username=${encodeURIComponent(username)}`),
 
+  /** Para volver a entrar: de la frase salió una address, acá averiguamos de quién es. */
+  lookupUserByAddress: (address: string) =>
+    request<User | null>(`/api/users/lookup?address=${encodeURIComponent(address)}`),
+
   createUser: (input: { name: string, username: string, walletAddress: string }) =>
     post<User>('/api/users', input),
 

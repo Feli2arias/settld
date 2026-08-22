@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
@@ -16,7 +17,10 @@ type Step = 'form' | 'creating'
 /**
  * Crear cuenta = crear wallet. Para el usuario es un solo paso: pone su nombre y
  * listo. Debajo, WDK genera una seed en este dispositivo y deriva la address.
- * En ningún momento le mostramos una seed phrase ni le pedimos que entienda qué es.
+ *
+ * Acá no le mostramos la frase de recuperación ni le pedimos que entienda qué es:
+ * eso arruinaría el momento de entrada. Pero está disponible a un toque desde la
+ * pantalla de inicio, y es lo que le permite volver a entrar desde otro dispositivo.
  */
 export default function OnboardingPage () {
   const router = useRouter()
@@ -121,9 +125,21 @@ export default function OnboardingPage () {
           )}
         </div>
 
-        <Button type="submit" size="pill-lg" disabled={!canSubmit} className="mt-8">
-          Crear cuenta
-        </Button>
+        <div className="mt-8 space-y-4">
+          <Button type="submit" size="pill-lg" disabled={!canSubmit}>
+            Crear cuenta
+          </Button>
+
+          <p className="text-center text-sm text-muted-foreground">
+            ¿Ya tenés cuenta?{' '}
+            <Link
+              href="/login"
+              className="font-bold text-foreground underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+            >
+              Entrá con tu frase
+            </Link>
+          </p>
+        </div>
       </form>
     </AppShell>
   )

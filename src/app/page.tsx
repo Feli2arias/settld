@@ -40,9 +40,14 @@ export default function WelcomePage () {
         </p>
 
         <div className="mt-10 hidden lg:block">
-          <Button size="pill-lg" className="w-auto px-10" asChild>
-            <Link href="/onboarding">Empezar</Link>
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button size="pill-lg" className="w-auto px-10" asChild>
+              <Link href="/onboarding">Empezar</Link>
+            </Button>
+            <Button size="pill-lg" variant="ghost" className="w-auto px-8" asChild>
+              <Link href="/login">Ya tengo cuenta</Link>
+            </Button>
+          </div>
           <p className="mt-4 text-xs text-muted-foreground">
             Tu wallet se crea en este dispositivo y no sale de acá.
           </p>
@@ -81,11 +86,14 @@ export default function WelcomePage () {
         </div>
       </div>
 
-      <div className="space-y-4 lg:hidden">
+      <div className="space-y-3 lg:hidden">
         <Button size="pill-lg" asChild>
           <Link href="/onboarding">Empezar</Link>
         </Button>
-        <p className="text-center text-xs text-muted-foreground">
+        <Button size="pill-lg" variant="ghost" asChild>
+          <Link href="/login">Ya tengo cuenta</Link>
+        </Button>
+        <p className="pt-1 text-center text-xs text-muted-foreground">
           Tu wallet se crea en este dispositivo y no sale de acá.
         </p>
       </div>

@@ -121,6 +121,20 @@ El truco para no duplicar el markup del grupo es `display: contents`: en mobile 
 contenedores de columna desaparecen y todo cae en una sola columna; a partir de `lg`
 se vuelven flex y arman las dos columnas.
 
+### Cuenta y recuperación
+
+La cuenta **es** la wallet, así que la credencial para volver a entrar es la frase de
+recuperación. El navegador deriva la address de la frase y le pregunta al servidor de quién
+es; la frase nunca sale del dispositivo, ni siquiera al iniciar sesión.
+
+- Al crear la cuenta no le mostramos la frase a nadie: eso arruinaría el momento de entrada.
+- Está a un toque, tocando tu nombre en la pantalla de inicio. Ahí también está tu address
+  y el botón para cerrar sesión.
+- Para entrar desde otro dispositivo: **Ya tengo cuenta** → pegar las 12 palabras.
+
+Efecto secundario útil para la demo: con esto podés mostrar el flujo de dos personas en un
+solo dispositivo, cerrando sesión y entrando con la otra cuenta.
+
 ### Decisiones que importan
 
 **La wallet corre en el navegador.** La seed se genera en el dispositivo y no sale de ahí.
@@ -143,6 +157,7 @@ un centavo.
 Funciona end-to-end, verificado en cadena:
 
 - [x] Onboarding que crea la wallet con WDK
+- [x] Volver a entrar con la frase de recuperación, y cerrar sesión
 - [x] Address y balance reales
 - [x] Grupos y miembros por `@usuario`
 - [x] Gastos divididos en partes iguales

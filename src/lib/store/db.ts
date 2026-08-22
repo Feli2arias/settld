@@ -43,6 +43,16 @@ export async function findUserByUsername (username: string): Promise<User | null
   return (await read()).users.find(u => u.username === target) ?? null
 }
 
+/**
+ * Busca por wallet address. Es lo que hace posible volver a entrar a una cuenta:
+ * de la frase de recuperación sale la address, y de la address sale el usuario.
+ * Comparamos en minúsculas porque el checksum de una address EVM es sólo cosmético.
+ */
+export async function findUserByWalletAddress (address: string): Promise<User | null> {
+  const target = address.toLowerCase()
+  return (await read()).users.find(u => u.walletAddress.toLowerCase() === target) ?? null
+}
+
 export async function findUserById (id: string): Promise<User | null> {
   return (await read()).users.find(u => u.id === id) ?? null
 }

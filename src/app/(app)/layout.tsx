@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Plus } from 'lucide-react'
+import { ChevronDown, Plus } from 'lucide-react'
+import { AccountDialog } from '@/components/account-dialog'
 import { PersonAvatar } from '@/components/person'
 import { Button } from '@/components/ui/button'
 import { useGroups } from '@/lib/client/use-groups'
@@ -75,12 +76,21 @@ export default function AppLayout ({ children }: LayoutProps<'/'>) {
         </nav>
 
         {session && (
-          <div className="mt-6 flex items-center gap-3 border-t border-border pt-6">
-            <PersonAvatar user={session} size="md" />
-            <span className="min-w-0">
-              <span className="block truncate text-sm font-bold">{session.name}</span>
-              <span className="block truncate text-xs text-muted-foreground">@{session.username}</span>
-            </span>
+          <div className="mt-6 border-t border-border pt-6">
+            <AccountDialog session={session}>
+              <button
+                type="button"
+                className="flex w-full items-center gap-3 rounded-2xl px-2 py-2 text-left transition-colors hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+              >
+                <PersonAvatar user={session} size="md" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-bold">{session.name}</span>
+                  <span className="block truncate text-xs text-muted-foreground">@{session.username}</span>
+                </span>
+                <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                <span className="sr-only">Abrir tu cuenta</span>
+              </button>
+            </AccountDialog>
           </div>
         )}
       </aside>

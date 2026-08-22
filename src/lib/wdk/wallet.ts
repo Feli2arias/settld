@@ -30,6 +30,18 @@ export async function generateSeedPhrase (): Promise<string> {
   return WDK.getRandomSeedPhrase()
 }
 
+/** Cantidades de palabras que admite BIP-39. WDK genera de 12. */
+const VALID_WORD_COUNTS = [12, 15, 18, 21, 24]
+
+/**
+ * Limpia una frase tipeada a mano: espacios de más, saltos de línea y mayúsculas
+ * que mete el teclado del celular. Devuelve null si ni siquiera tiene forma de frase.
+ */
+export function normalizeSeedPhrase (input: string): string | null {
+  const words = input.trim().toLowerCase().split(/\s+/).filter(Boolean)
+  return VALID_WORD_COUNTS.includes(words.length) ? words.join(' ') : null
+}
+
 /**
  * Abre la cuenta de una seed y se la pasa a `fn`, asegurando que las claves se borren
  * de memoria al terminar, pase lo que pase.

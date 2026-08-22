@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowDownLeft, Loader2, Plus } from 'lucide-react'
+import { ArrowDownLeft, ChevronDown, Loader2, Plus } from 'lucide-react'
+import { AccountDialog } from '@/components/account-dialog'
 import { Amount } from '@/components/amount'
 import { AppShell } from '@/components/app-shell'
 import { Button } from '@/components/ui/button'
@@ -95,9 +96,16 @@ export default function HomePage () {
   return (
     <AppShell width="wide" className="gap-8 lg:gap-10">
       <header className="pt-4 lg:pt-0">
-        <p className="text-sm font-semibold text-muted-foreground lg:text-base">
-          {greeting()}, {session.name.split(' ')[0]}
-        </p>
+        <AccountDialog session={session}>
+          <button
+            type="button"
+            className="-ml-2 flex items-center gap-2 rounded-full px-2 py-1 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none lg:text-base"
+          >
+            {greeting()}, {session.name.split(' ')[0]}
+            <ChevronDown className="size-4" aria-hidden />
+            <span className="sr-only">Abrir tu cuenta</span>
+          </button>
+        </AccountDialog>
       </header>
 
       <section aria-labelledby="balance-label">
