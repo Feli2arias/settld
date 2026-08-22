@@ -2,22 +2,35 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowDownLeft, ChevronDown, Plus } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, ChevronDown, CreditCard, Plus, Wallet } from 'lucide-react'
 import { AccountDialog } from '@/components/account-dialog'
 import { AddMoneyDialog } from '@/components/add-money-dialog'
-import { Amount } from '@/components/amount'
 import { AppShell } from '@/components/app-shell'
+import { RecentActivity } from '@/components/dashboard/activity-list'
+import { FocusCard } from '@/components/dashboard/focus-card'
+import { OpenGroups } from '@/components/dashboard/group-list'
+import { MonthCard } from '@/components/dashboard/month-card'
+import { Panel } from '@/components/dashboard/panel'
+import { StatCard } from '@/components/dashboard/stat-card'
 import { Button } from '@/components/ui/button'
 import { api } from '@/lib/client/api'
 import { useRequireSession } from '@/lib/client/use-session'
-import { settlementPlan } from '@/lib/split/balances'
-import type { Group } from '@/lib/split/types'
+import { type Dashboard, buildDashboard } from '@/lib/split/dashboard'
 import { getBalanceCentsOf } from '@/lib/wdk/wallet'
 
-interface GroupSummary {
-  group: Group
-  netCents: number
-}
+/**
+ * The dashboard.
+ *
+ * Every other screen in Settld looks at one thing at a time: a group, an expense, a
+ * payment. This one is the only place that answers the question you actually open the app
+ * with — what is still open, and what do I do about it. So it leads with the three numbers
+ * that matter (owed to you, owed by you, what you can spend) and then puts the group that
+ * needs you next to the list of everything else.
+ *
+ * It's the widest layout in the app: two columns of cards on desktop, a single stack on a
+ * phone. Nothing here is decorative — every figure is derived from real groups by
+ * `buildDashboard`, which is a pure function and is where the arithmetic is tested.
+ */
 
 const greeting = () => {
   const hour = new Date().getHours()
@@ -27,10 +40,13 @@ const greeting = () => {
   return 'Good evening'
 }
 
+const plural = (count: number, one: string, many: string) =>
+  `${count} ${count === 1 ? one : many}`
+
 export default function HomePage () {
   const session = useRequireSession()
   const [balanceCents, setBalanceCents] = useState<number | null>(null)
-  const [summaries, setSummaries] = useState<GroupSummary[] | null>(null)
+  const [board, setBoard] = useState<Dashboard | null>(null)
 
   /** The balance comes from the blockchain, not from our database. */
   const refreshBalance = useCallback(async (address: string) => {
@@ -54,14 +70,7 @@ export default function HomePage () {
     void (async () => {
       const groups = await api.listGroups(session.userId)
       const details = await Promise.all(groups.map(group => api.getGroup(group.id)))
-      if (cancelled) return
-
-      setSummaries(
-        details.map(detail => ({
-          group: detail.group,
-          netCents: settlementPlan(detail.expenses, detail.settlements, session.userId).netCents
-        }))
-      )
+      if (!cancelled) setBoard(buildDashboard(details, session.userId))
     })()
 
     return () => { cancelled = true }
@@ -69,88 +78,112 @@ export default function HomePage () {
 
   if (!session) return null
 
+  // "Add expense" needs a group. Whichever one is under the spotlight is the one you were
+  // most likely about to touch; with no groups at all, the button creates the first one.
+  const addExpenseHref = board?.focus
+    ? `/groups/${board.focus.group.id}/expenses/new`
+    : '/groups/new'
+
   return (
-    <AppShell width="wide" className="gap-8 lg:gap-10">
-      <header className="pt-4 lg:pt-0">
-        <AccountDialog session={session}>
-          <button
-            type="button"
-            className="-ml-2 flex items-center gap-2 rounded-full px-2 py-1 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none lg:text-base"
-          >
-            {greeting()}, {session.name.split(' ')[0]}
-            <ChevronDown className="size-4" aria-hidden />
-            <span className="sr-only">Open your account</span>
-          </button>
-        </AccountDialog>
-      </header>
+    <AppShell width="full" className="gap-4 lg:gap-5">
+      <header className="flex flex-wrap items-end justify-between gap-4 pt-4 lg:pt-0">
+        <div className="min-w-0 flex-1 basis-72">
+          <AccountDialog session={session}>
+            <button
+              type="button"
+              className="-ml-2 flex max-w-full items-center gap-2 rounded-2xl px-2 py-1 text-left transition-colors hover:bg-secondary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+            >
+              <span className="truncate font-heading text-2xl font-extrabold tracking-[-0.035em] sm:text-3xl lg:text-4xl">
+                {greeting()}, {session.name.split(' ')[0]}
+              </span>
+              <ChevronDown className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+              <span className="sr-only">Open your account</span>
+            </button>
+          </AccountDialog>
 
-      <section aria-labelledby="balance-label">
-        <p id="balance-label" className="eyebrow mb-3">Your balance</p>
-        {balanceCents === null
-          ? <span className="amount block text-[3.75rem] text-muted-foreground sm:text-[4.5rem]">···</span>
-          : <Amount cents={balanceCents} size="hero" />}
+          <p className="mt-1 text-sm font-semibold text-muted-foreground">
+            Here&rsquo;s what&rsquo;s still open.
+          </p>
+        </div>
 
-        <div className="mt-6 flex gap-3">
+        <div className="flex flex-wrap gap-2">
+          <Button size="pill" asChild>
+            <Link href={addExpenseHref}>
+              <Plus aria-hidden />
+              Add expense
+            </Link>
+          </Button>
+
           <AddMoneyDialog
             address={session.walletAddress}
             onFunded={() => refreshBalance(session.walletAddress)}
           >
-            <Button size="pill">
+            <Button size="pill" variant="outline">
               <ArrowDownLeft aria-hidden />
               Add money
             </Button>
           </AddMoneyDialog>
         </div>
+      </header>
+
+      <section aria-label="Your money" className="grid gap-4 md:grid-cols-3">
+        <StatCard
+          label="You are owed"
+          cents={board?.owedToYouCents ?? null}
+          caption={
+            !board || board.peopleOwingYou === 0
+              ? 'Nobody owes you right now'
+              : `${plural(board.peopleOwingYou, 'friend owes', 'friends owe')} you`
+          }
+          icon={Wallet}
+          tone="credit"
+        />
+
+        <StatCard
+          label="You owe"
+          cents={board?.youOweCents ?? null}
+          caption={
+            !board || board.pendingPayments === 0
+              ? "You're all clear"
+              : plural(board.pendingPayments, 'pending payment', 'pending payments')
+          }
+          icon={ArrowUpRight}
+          tone="debit"
+        />
+
+        <StatCard
+          label="Available balance"
+          cents={balanceCents}
+          caption="Ready to use"
+          icon={CreditCard}
+        />
       </section>
 
-      <section aria-labelledby="groups-label" className="flex-1">
-        <p id="groups-label" className="eyebrow mb-3">Your groups</p>
+      {board === null
+        ? <Panel><p className="py-8 text-center text-sm text-muted-foreground">Loading…</p></Panel>
+        : (
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-start">
+              <div id="groups" className="flex min-w-0 scroll-mt-6 flex-col gap-4">
+                <section aria-labelledby="groups-label">
+                  <OpenGroups groups={board.groups} />
+                </section>
 
-        {summaries === null && (
-          <p className="py-6 text-sm text-muted-foreground">Loading…</p>
-        )}
+                <section id="activity" aria-labelledby="activity-label" className="scroll-mt-6">
+                  <RecentActivity items={board.activity} />
+                </section>
+              </div>
 
-        {summaries?.length === 0 && (
-          <div className="rounded-3xl border border-dashed border-border px-6 py-10 text-center">
-            <p className="font-heading text-lg font-bold">No groups yet</p>
-            <p className="mt-1.5 text-sm text-muted-foreground">
-              Create one to start splitting expenses.
-            </p>
-          </div>
-        )}
+              <div className="flex min-w-0 flex-col gap-4">
+                {board.focus && (
+                  <section aria-labelledby="focus-label">
+                    <FocusCard focus={board.focus} userId={session.userId} />
+                  </section>
+                )}
 
-        <ul className="grid gap-3 md:grid-cols-2">
-          {summaries?.map(({ group, netCents }) => (
-            <li key={group.id}>
-              <Link
-                href={`/groups/${group.id}`}
-                className="flex h-full items-center justify-between gap-4 rounded-3xl bg-card px-5 py-4 ring-1 ring-border transition-all motion-safe:hover:scale-[1.01] hover:ring-ring/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-              >
-                <span className="min-w-0">
-                  <span className="block truncate font-heading text-lg font-bold">{group.name}</span>
-                  <span className="mt-0.5 block text-xs font-semibold text-muted-foreground">
-                    {netCents === 0
-                      ? "You're all settled"
-                      : netCents > 0 ? 'You are owed' : 'You owe'}
-                  </span>
-                </span>
-
-                {netCents === 0
-                  ? <span aria-hidden className="text-xl text-credit">✓</span>
-                  : <Amount cents={Math.abs(netCents)} size="md" tone={netCents > 0 ? 'credit' : 'debit'} />}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* On desktop this button already lives in the sidebar. */}
-      <Button size="pill-lg" variant="secondary" className="lg:hidden" asChild>
-        <Link href="/groups/new">
-          <Plus aria-hidden />
-          New group
-        </Link>
-      </Button>
+                <MonthCard month={board.month} />
+              </div>
+            </div>
+          )}
     </AppShell>
   )
 }

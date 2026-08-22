@@ -32,8 +32,8 @@ const buttonVariants = cva(
         "icon-sm":
           "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
         "icon-lg": "size-9",
-        // Píldoras para el pulgar: son las acciones principales en mobile.
-        // Crecen al hover y se comprimen al presionar — el botón responde físicamente.
+        // Pills built for the thumb: these are the main actions on mobile. They grow on
+        // hover and squash on press — the button answers back, physically.
         pill: "h-11 gap-2 rounded-full px-5 text-sm font-bold active:translate-y-0 motion-safe:hover:scale-[1.03] motion-safe:active:scale-[0.97] [&_svg:not([class*='size-'])]:size-4",
         "pill-lg":
           "h-14 w-full gap-2 rounded-full px-7 text-base font-bold active:translate-y-0 motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.98] [&_svg:not([class*='size-'])]:size-5",

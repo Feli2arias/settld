@@ -40,7 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Datos locales y secretos
+# local data and secrets
 .data/
 .env.local
 .env*.local

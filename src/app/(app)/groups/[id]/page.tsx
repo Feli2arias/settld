@@ -60,8 +60,8 @@ export default function GroupPage ({ params }: PageProps<'/groups/[id]'>) {
       title={group.name}
       backHref="/home"
       width="wide"
-      // En desktop el resumen y la lista de gastos se ven a la vez, en dos columnas.
-      // En mobile los wrappers usan `display: contents` y todo cae en una sola columna.
+      // On desktop the summary and the expenses are seen at once, in two columns. On
+      // mobile the wrappers use `display: contents` and everything falls into one column.
       className="gap-8 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-start lg:gap-x-12 lg:gap-y-0"
     >
       <div className="contents lg:flex lg:flex-col lg:gap-8">

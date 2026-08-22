@@ -7,7 +7,8 @@ import { cn } from '@/lib/utils'
 // Variants:
 //   - width="narrow" (default): focused tasks — onboarding, adding an expense, paying.
 //     On desktop it centres as a card instead of stretching.
-//   - width="wide": content screens — home, group. On desktop they use the width available.
+//   - width="wide": content screens — the group. On desktop they use the width available.
+//   - width="full": the dashboard, the only screen laid out in two columns of cards.
 // States: structural; the interactive states belong to the back link
 // Accessibility: <main> as a landmark. The title is an <h1> on desktop and a micro-label
 //   in the mobile bar. The back button is a link with an aria-label.
@@ -27,7 +28,7 @@ export function AppShell ({
   title?: string
   backHref?: string
   action?: React.ReactNode
-  width?: 'narrow' | 'wide'
+  width?: 'narrow' | 'wide' | 'full'
   className?: string
 }) {
   const hasBar = Boolean(title || backHref || action)
@@ -36,9 +37,9 @@ export function AppShell ({
     <div
       className={cn(
         'mx-auto flex w-full max-w-md flex-1 flex-col',
-        width === 'narrow'
-          ? 'lg:max-w-xl lg:justify-center lg:py-16'
-          : 'md:max-w-2xl lg:mx-0 lg:max-w-5xl lg:px-10 lg:py-12'
+        width === 'narrow' && 'lg:max-w-xl lg:justify-center lg:py-16',
+        width === 'wide' && 'md:max-w-2xl lg:mx-0 lg:max-w-5xl lg:px-10 lg:py-12',
+        width === 'full' && 'md:max-w-3xl lg:mx-0 lg:max-w-6xl lg:px-10 lg:py-10'
       )}
     >
       {hasBar && (

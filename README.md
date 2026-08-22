@@ -42,7 +42,11 @@ The environment picks this on its own, in `src/lib/store/backend.ts`:
   injects on its own. Speaks the REST API with bare `fetch`, no new dependencies.
 
 Careful: if you run locally with those variables present, you're writing to the same
-database as production.
+database as production. To work against the local file instead, without touching them:
+
+```bash
+npm run dev:local --prefix split
+```
 
 Other commands:
 
@@ -98,7 +102,7 @@ payment status            receipt
 
 | Folder | What's in it |
 |---|---|
-| `src/lib/split/` | The brain: net balances and minimum settlement. Pure functions, with tests. |
+| `src/lib/split/` | The brain: net balances, minimum settlement and everything the dashboard adds up. Pure functions, with tests. |
 | `src/lib/wdk/` | Everything that touches the blockchain: wallet, amounts, receipts, network config. |
 | `src/lib/store/` | Persistence and input validation. `backend.ts` picks where to store. |
 | `src/lib/client/` | Session, local seed and the API client. |
@@ -110,16 +114,33 @@ It isn't one screen stretched: they're two different layouts sharing the same co
 
 | | mobile (<768) | tablet (768–1023) | desktop (≥1024) |
 |---|---|---|---|
-| Navigation | sticky top bar with a back button | same | fixed sidebar with the groups always in view |
-| Width | a single 28rem column, built for the thumb | 42rem | up to 64rem, left-aligned next to the sidebar |
+| Navigation | sticky top bar with a back button | same | fixed sidebar: where to go, the groups, and you |
+| Width | a single 28rem column, built for the thumb | 42rem–48rem | up to 72rem, left-aligned next to the sidebar |
 | Landing | headline and buttons stacked | same | headline left, a look at the product right |
-| Home | groups as a list | groups in two columns | groups in two columns, no "New group" button because it's in the sidebar |
+| Dashboard | one stack of cards; the group status rides with the member count | three figures across, then the stack | two columns of cards: groups and activity left, the group that needs you and the month right |
 | Group | everything in one column | same | two columns: summary and debts left, expenses right |
 | Forms | full screen, button at the bottom | same | vertically centred card |
 
 The trick that avoids duplicating the group markup is `display: contents`: on mobile the
 column containers disappear and everything falls into a single column; from `lg` up they
 become flex and build the two columns.
+
+### The dashboard
+
+Every other screen looks at one thing: a group, an expense, a payment. The dashboard is the
+only one that answers the question you actually open the app with — what's still open, and
+what do I do about it. It leads with three figures (owed to you, owed by you, what you can
+spend), then puts the group that needs you next to everything else.
+
+Nothing on it is decorative. The three figures, the group rows, the activity feed, the
+member table and the month's totals are all derived from the same groups the app already
+loaded, by `src/lib/split/dashboard.ts` — pure functions over integers, which is where the
+arithmetic is tested. The only number that doesn't come from there is the balance, which
+comes from the blockchain.
+
+Two things the design deliberately does not have: a reminder button, because Settld can't
+send anyone a message, and group photos, because we don't store any — a group gets a tinted
+square with its initials instead.
 
 ### How you add money
 

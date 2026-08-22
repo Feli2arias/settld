@@ -26,7 +26,7 @@ const SIZES = {
   lg: 'size-14 text-base'
 } as const
 
-const initials = (name: string) =>
+export const initials = (name: string) =>
   name
     .split(' ')
     .filter(Boolean)
@@ -35,7 +35,8 @@ const initials = (name: string) =>
     .join('')
     .toUpperCase()
 
-const tintFor = (seed: string) => {
+/** The same seed always lands on the same tint, so a person keeps their colour everywhere. */
+export const tintFor = (seed: string) => {
   const sum = [...seed].reduce((acc, char) => acc + char.charCodeAt(0), 0)
   return TINTS[sum % TINTS.length]
 }
