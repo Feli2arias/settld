@@ -1,7 +1,7 @@
 /**
  * Cifrado de la wallet con la contraseña del usuario.
  *
- * La idea: Split guarda un bulto cifrado que sin la contraseña no abre. La contraseña
+ * La idea: Settld guarda un bulto cifrado que sin la contraseña no abre. La contraseña
  * nunca se manda al servidor y la wallet se descifra recién en el dispositivo, así que
  * entrar con usuario y contraseña se siente como cualquier app, pero las claves siguen
  * siendo del usuario. El servidor no puede gastar su plata ni aunque quiera.

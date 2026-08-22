@@ -1,5 +1,5 @@
 /**
- * Modelo de datos de Split.
+ * Modelo de datos de Settld.
  *
  * Todos los montos viven en "centavos" (enteros) para no arrastrar errores de punto
  * flotante al repartir un gasto. USD₮ tiene 6 decimales on-chain, así que la conversión
@@ -12,7 +12,7 @@ export const TOKEN_UNITS_PER_CENT = 10_000
 /**
  * La wallet cifrada con la contraseña del usuario.
  *
- * Es lo único que Split guarda de las claves, y sin la contraseña —que nunca llega
+ * Es lo único que Settld guarda de las claves, y sin la contraseña —que nunca llega
  * al servidor— no se puede abrir. Por eso nunca viaja junto al resto del usuario:
  * se pide aparte, sólo al iniciar sesión.
  */

@@ -20,7 +20,7 @@ const body = Manrope({
 })
 
 export const metadata: Metadata = {
-  title: 'Split — Split expenses. Settle instantly.',
+  title: 'Settld — Split expenses. Settle instantly.',
   description: 'Dividí gastos con tus amigos y saldá las deudas de verdad, en USD₮.'
 }
 

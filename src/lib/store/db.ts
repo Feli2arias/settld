@@ -1,5 +1,5 @@
 /**
- * Almacenamiento de Split: usuarios, grupos, gastos y settlements.
+ * Almacenamiento de Settld: usuarios, grupos, gastos y settlements.
  *
  * Acá NO viven seeds ni claves. Lo único que sabemos de una wallet es su address pública.
  *

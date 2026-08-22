@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils'
 // Responsive: oculta por debajo de lg (1024). Ancho fijo de 17rem, altura completa.
 
 /**
- * Split en el celular es una app de una sola columna que se maneja con el pulgar.
+ * Settld en el celular es una app de una sola columna que se maneja con el pulgar.
  * En una pantalla grande esa misma columna angosta en el medio de la nada se ve pobre,
  * así que acá el espacio de más se usa para dejar los grupos siempre a la vista.
  */
@@ -35,7 +35,7 @@ export default function AppLayout ({ children }: LayoutProps<'/'>) {
           href="/home"
           className="font-heading text-2xl font-extrabold tracking-[-0.04em] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
-          Split
+          Settld.
         </Link>
 
         <nav aria-label="Tus grupos" className="mt-10 flex-1 overflow-y-auto">

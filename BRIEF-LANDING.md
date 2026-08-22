@@ -1,15 +1,19 @@
-# Contexto de Split para generar la landing
+# Contexto de Settld para generar la landing
 
-> Copiá todo lo que sigue y pegalo en ChatGPT. Si al final le pusiste **Settld** en vez de
-> Split, reemplazá el nombre antes de pegarlo — el resto sirve igual.
+> Copiá todo lo que sigue y pegalo en ChatGPT para generar imágenes de la marca.
+>
+> Ojo: la landing real ya existe y está en producción, así que para que una imagen salga
+> fiel conviene además adjuntar una captura de https://split-zeta-one.vercel.app — la
+> descripción de abajo quedó de cuando la página todavía no estaba construida y difiere
+> en algunos detalles.
 
 ---
 
 ## El producto
 
-Split es una app de gastos compartidos. Dividís la cena, el Airbnb o el viaje con tus
+Settld es una app de gastos compartidos. Dividís la cena, el Airbnb o el viaje con tus
 amigos, y cuando llega el momento de saldar, **la plata se mueve de verdad** desde la app.
-Las apps tradicionales te dicen quién te debe; Split hace que te paguen.
+Las apps tradicionales te dicen quién te debe; Settld hace que te paguen.
 
 Por debajo cada usuario tiene una wallet self-custodial y los pagos son transferencias
 reales de dólares digitales, pero **el usuario nunca se entera**. No hay una sola pantalla
@@ -20,7 +24,7 @@ Público: gente común de 20 a 40 años que sale a comer con amigos y se cansó 
 a los que no pagan. No son técnicos y no les interesa serlo.
 
 Frase central: **"Split expenses. Settle instantly."**
-Bajada: "Las apps de gastos te dicen quién te debe. Split hace que te paguen."
+Bajada: "Las apps de gastos te dicen quién te debe. Settld hace que te paguen."
 
 ## Identidad visual
 
@@ -70,9 +74,9 @@ Es mobile-first, pero en desktop cambia de layout: dos columnas.
 **Izquierda:**
 - Arriba, en micro-mayúsculas grises: `ALEPH HACKATHON 2026`
 - Titular gigante, apilado en cuatro renglones muy juntos, en negro:
-  `Split` / `expenses.` / `Settle` / `instantly.`
+  `Settld` / `expenses.` / `Settle` / `instantly.`
   — con la palabra **"Settle" en verde** (`#176933`), el resto en tinta.
-- Bajada en gris: "Las apps de gastos te dicen quién te debe. Split hace que te paguen."
+- Bajada en gris: "Las apps de gastos te dicen quién te debe. Settld hace que te paguen."
 - Dos botones: uno lima sólido que dice **Empezar**, y al lado uno fantasma que dice
   **Ya tengo cuenta**.
 - Letra chica: "Tu wallet se crea en este dispositivo y no sale de acá."
@@ -100,7 +104,7 @@ Debajo y apenas rotada al otro lado (+1°), una píldora verde lima con texto ve
 
 ## El pedido para la imagen
 
-Generá un mockup de la landing page de Split, una app de gastos compartidos entre amigos.
+Generá un mockup de la landing page de Settld, una app de gastos compartidos entre amigos.
 Estilo editorial fintech, cálido y con mucho aire — lo opuesto a una app de crypto.
 
 Fondo color papel cálido `#faf5eb`, con una textura de puntitos casi imperceptible.

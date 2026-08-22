@@ -5,7 +5,7 @@
  * completa la compra ahí, con su tarjeta, como en cualquier checkout. Los fondos
  * caen directo en su wallet.
  *
- * Le pasamos el tema de Split para que el widget no se sienta una app ajena.
+ * Le pasamos el tema de Settld para que el widget no se sienta una app ajena.
  */
 
 import { MOONPAY_API_KEY, MOONPAY_ASSET, MOONPAY_ENVIRONMENT, WDK_CONFIG } from './config'

@@ -1,5 +1,5 @@
 /**
- * Configuración de red de Split.
+ * Configuración de red de Settld.
  *
  * Corremos sobre Ethereum Sepolia con USD₮ de prueba, y usamos ERC-4337 con paymaster
  * para que el gas se pague en el mismo USD₮. Consecuencia importante: ningún usuario

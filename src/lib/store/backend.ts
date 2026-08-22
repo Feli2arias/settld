@@ -1,5 +1,5 @@
 /**
- * De dónde salen y a dónde van los datos de Split.
+ * De dónde salen y a dónde van los datos de Settld.
  *
  * Hay dos implementaciones y se elige sola según el entorno:
  *

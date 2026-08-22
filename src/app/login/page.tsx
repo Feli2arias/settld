@@ -98,7 +98,7 @@ export default function LoginPage () {
       const user = await api.lookupUserByAddress(await deriveAddress(seedPhrase))
 
       if (!user) {
-        setError('Esa frase es válida, pero no hay ninguna cuenta de Split asociada')
+        setError('Esa frase es válida, pero no hay ninguna cuenta de Settld asociada')
         return
       }
 
@@ -212,7 +212,7 @@ export default function LoginPage () {
 
                 <p id="phrase-hint" className="text-xs text-muted-foreground">
                   {wordCount === 0
-                    ? 'La encontrás en Split, en la pantalla de inicio, tocando tu nombre.'
+                    ? 'La encontrás en Settld, en la pantalla de inicio, tocando tu nombre.'
                     : `${wordCount} ${wordCount === 1 ? 'palabra' : 'palabras'}`}
                 </p>
 

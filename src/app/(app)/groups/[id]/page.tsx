@@ -135,7 +135,7 @@ export default function GroupPage ({ params }: PageProps<'/groups/[id]'>) {
               <div className="rounded-3xl border border-dashed border-border px-6 py-10 text-center">
                 <p className="font-heading text-lg font-bold">Todavía no hay gastos</p>
                 <p className="mt-1.5 text-sm text-muted-foreground">
-                  Cargá el primero y Split calcula el resto.
+                  Cargá el primero y Settld calcula el resto.
                 </p>
               </div>
             )

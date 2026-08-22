@@ -1,8 +1,8 @@
 /**
- * La capa de wallet de Split, construida sobre WDK.
+ * La capa de wallet de Settld, construida sobre WDK.
  *
  * Todo esto corre en el navegador: la seed se genera en el dispositivo del usuario y
- * nunca se manda al servidor. Split guarda la address pública (para que otros puedan
+ * nunca se manda al servidor. Settld guarda la address pública (para que otros puedan
  * pagarle) y nada más.
  *
  * Ninguna función de este módulo debe filtrar la seed ni el keyPair al resto de la app.
@@ -60,7 +60,7 @@ async function withAccount<T> (seedPhrase: string, fn: (account: Account) => Pro
   }
 }
 
-/** Deriva la address de la smart account. Es lo único que Split publica de una wallet. */
+/** Deriva la address de la smart account. Es lo único que Settld publica de una wallet. */
 export const deriveAddress = (seedPhrase: string): Promise<string> =>
   withAccount(seedPhrase, account => account.getAddress())
 

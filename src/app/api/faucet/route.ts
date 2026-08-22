@@ -8,7 +8,7 @@ import { centsToTokenUnits } from '@/lib/wdk/money'
  * El botón "Cargar saldo".
  *
  * En una app real esto sería un on-ramp de fiat. Acá corremos sobre testnet, así que
- * Split tiene una cuenta de tesorería cargada desde un faucet que le manda USD₮ de
+ * Settld tiene una cuenta de tesorería cargada desde un faucet que le manda USD₮ de
  * prueba a quien lo pide. Es lo que permite que cualquiera abra la app y tenga saldo
  * sin pasar por un faucet con captcha.
  *

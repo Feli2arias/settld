@@ -1,12 +1,12 @@
-# Split
+# Settld
 
 **Split expenses. Settle instantly.** — Aleph Hackathon 2026, track WDK.
 
-Las apps de gastos compartidos te dicen quién te debe. Split hace que te paguen: calcula
+Las apps de gastos compartidos te dicen quién te debe. Settld hace que te paguen: calcula
 las deudas del grupo y las liquida con una transferencia real de USD₮ desde una wallet
 self-custodial creada con el [Wallet Development Kit de Tether](https://docs.wdk.tether.io).
 
-> Split decide **quién le paga a quién**. WDK hace que el pago **ocurra de verdad**.
+> Settld decide **quién le paga a quién**. WDK hace que el pago **ocurra de verdad**.
 
 ---
 
@@ -63,7 +63,7 @@ plata se mueve de verdad.
    wallet. Daniel nunca ve una seed phrase ni sabe que tiene una.
 2. Daniel toca **Cargar saldo** → **Fondos de prueba** y aparecen $50.
 3. Crea el grupo **Aleph Hackathon** y suma a **@felipe**.
-4. Carga el gasto **Cena, $20**, dividido entre los dos. Split calcula **$10 cada uno**.
+4. Carga el gasto **Cena, $20**, dividido entre los dos. Settld calcula **$10 cada uno**.
 5. **Felipe** abre el grupo y ve **"Debés $10.00"**.
 6. Toca **Saldar mi deuda** → el preview le muestra a quién le paga, cuánto, cuánto sale
    de red y con cuánto queda. Nada salió todavía.
@@ -81,10 +81,10 @@ explorer público, disparada desde una app que nunca dijo la palabra "blockchain
 ```
 usuario
    ↓
-Split UI  ─────────────────┐
+Settld UI  ─────────────────┐
    │                       │
    ▼                       ▼
-lógica de Split           WDK
+lógica de Settld           WDK
 usuarios, grupos          wallet self-custodial
 gastos, división          address y balance
 quién le debe a quién     preview del pago
@@ -159,7 +159,7 @@ compra", no como "mirá cómo entra la plata".
 
 La cuenta **es** la wallet. Eso plantea un problema: si la credencial fuera la frase de
 12 palabras, entrar se sentiría cualquier cosa menos una app normal. Y si el servidor
-guardara la clave para poder ofrecer usuario y contraseña, Split sería custodial y podría
+guardara la clave para poder ofrecer usuario y contraseña, Settld sería custodial y podría
 gastar la plata de sus usuarios.
 
 La salida es cifrar la wallet con la contraseña, en el dispositivo:

@@ -1,5 +1,5 @@
 /**
- * Cómo Split se entera de que un pago realmente ocurrió.
+ * Cómo Settld se entera de que un pago realmente ocurrió.
  *
  * El camino obvio es preguntarle al bundler, pero el bundler público tiene rate limit
  * y falla justo cuando más importa. Así que vamos a la fuente de verdad: el contrato

@@ -1,5 +1,5 @@
 /**
- * Conversiones entre las tres formas en que aparece la plata en Split:
+ * Conversiones entre las tres formas en que aparece la plata en Settld:
  * lo que ve el usuario ($30.00), lo que guardamos (3000 centavos) y lo que
  * viaja on-chain (30000000 unidades de USD₮).
  */

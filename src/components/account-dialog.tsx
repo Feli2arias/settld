@@ -27,7 +27,7 @@ import { type StoredSession, forgetEverything, readSeed } from '@/lib/client/vau
 /**
  * La cuenta del usuario, y el único lugar donde aparece la frase de recuperación.
  *
- * Split esconde la infraestructura por diseño, pero esconder la frase del todo sería
+ * Settld esconde la infraestructura por diseño, pero esconder la frase del todo sería
  * mentirle a la gente: sin ella, borrar el navegador significa perder la plata para
  * siempre. Así que no se la mostramos en la cara al crear la cuenta, pero está acá,
  * a un toque, y es lo que hace posible volver a entrar desde otro dispositivo.

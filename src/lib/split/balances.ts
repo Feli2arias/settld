@@ -1,9 +1,9 @@
 /**
- * El cerebro de Split: a partir de los gastos de un grupo, calcula quién le debe a quién
+ * El cerebro de Settld: a partir de los gastos de un grupo, calcula quién le debe a quién
  * y cuál es el conjunto más chico de transferencias que deja a todos en cero.
  *
  * Todo acá es una función pura sobre enteros. No hay blockchain, no hay red, no hay estado:
- * Split decide QUIÉN le paga a QUIÉN, y recién después WDK ejecuta esos pagos.
+ * Settld decide QUIÉN le paga a QUIÉN, y recién después WDK ejecuta esos pagos.
  */
 
 import type { Expense, Payment, Settlement } from './types'
@@ -108,7 +108,7 @@ export interface SettlementPlan {
  * El plan visto desde los ojos de una persona. Es lo que alimenta la pantalla de Settle Up.
  *
  * Importante: cada usuario sólo confirma las transferencias que salen de SU wallet.
- * Split nunca ejecuta un pago en nombre de otro.
+ * Settld nunca ejecuta un pago en nombre de otro.
  */
 export function settlementPlan (expenses: Expense[], settlements: Settlement[], userId: string): SettlementPlan {
   const netCents = computeNetBalances(expenses, settlements)[userId] ?? 0

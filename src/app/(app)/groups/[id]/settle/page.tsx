@@ -28,11 +28,11 @@ type Stage =
 /**
  * Settle Up.
  *
- * Es la única pantalla donde Split toca plata de verdad, así que sigue una regla
+ * Es la única pantalla donde Settld toca plata de verdad, así que sigue una regla
  * estricta: nada se manda a la red sin que el usuario haya visto antes el monto
  * exacto, el costo de red y cómo le queda el saldo, y haya apretado confirmar.
  *
- * Un usuario sólo firma transferencias que salen de SU wallet. Split nunca paga
+ * Un usuario sólo firma transferencias que salen de SU wallet. Settld nunca paga
  * en nombre de otro.
  */
 export default function SettlePage ({ params }: PageProps<'/groups/[id]/settle'>) {

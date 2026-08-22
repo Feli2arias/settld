@@ -1,5 +1,5 @@
 /**
- * Cliente de la API de Split. Una sola función hace el fetch y desenvuelve la
+ * Cliente de la API de Settld. Una sola función hace el fetch y desenvuelve la
  * respuesta, así ninguna pantalla tiene que acordarse de mirar `error`.
  */
 
