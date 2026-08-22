@@ -12,6 +12,7 @@ import {
   DialogTrigger
 } from '@/components/ui/dialog'
 import { formatMoney } from '@/lib/wdk/money'
+import { describeWalletError } from '@/lib/wdk/errors'
 import { buildBuyUrl, isOnrampAvailable } from '@/lib/wdk/onramp'
 
 // Contract: AddMoneyDialog
@@ -90,7 +91,7 @@ export function AddMoneyDialog ({
       window.open(url, '_blank', 'noopener,noreferrer')
       setOpen(false)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "We couldn't open the payment")
+      setError(describeWalletError(err, "We couldn't open the payment"))
     } finally {
       setBusy(false)
     }

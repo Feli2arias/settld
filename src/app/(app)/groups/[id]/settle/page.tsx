@@ -14,6 +14,7 @@ import { readSeed } from '@/lib/client/vault'
 import { settlementPlan } from '@/lib/split/balances'
 import type { Payment, User } from '@/lib/split/types'
 import { explorerTxUrl } from '@/lib/wdk/config'
+import { describeWalletError } from '@/lib/wdk/errors'
 import { formatMoney } from '@/lib/wdk/money'
 import { type TransferPreview, previewTransfer, sendTransfer } from '@/lib/wdk/wallet'
 
@@ -57,7 +58,9 @@ export default function SettlePage ({ params }: PageProps<'/groups/[id]/settle'>
       const quote = await previewTransfer(seedPhrase, payee.walletAddress, payment.amountCents)
       setStage({ name: 'preview', payment, payee, quote })
     } catch (err) {
-      setStage({ name: 'error', message: err instanceof Error ? err.message : "We couldn't prepare the payment" })
+      // The user gets a sentence; whoever is debugging the demo gets the real thing.
+      console.warn('[settle] could not quote the transfer', err)
+      setStage({ name: 'error', message: describeWalletError(err, "We couldn't prepare the payment") })
     }
   }, [])
 
@@ -124,7 +127,8 @@ export default function SettlePage ({ params }: PageProps<'/groups/[id]/settle'>
         })
         return
       }
-      setStage({ name: 'error', message: err instanceof Error ? err.message : 'The payment could not be completed' })
+      console.warn('[settle] the transfer did not go out', err)
+      setStage({ name: 'error', message: describeWalletError(err, 'The payment could not be completed') })
     }
   }
 

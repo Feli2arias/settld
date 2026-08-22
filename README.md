@@ -272,14 +272,39 @@ anything that would custody the user's keys.
 
 ## Known risks
 
-**The public bundler is rate limited.** This happened during development: the transfer goes
-through fine, but querying its status returns *"Public API key rate limit exceeded"*. That's
-why confirmation doesn't ask the bundler: it reads the `UserOperationEvent` the EntryPoint
-contract emits, straight from the RPC (`src/lib/wdk/receipt.ts`). That gives us both the
-real transaction hash and whether the operation succeeded. Even so, for a live demo it's
-worth getting a free API key at [dashboard.pimlico.io](https://dashboard.pimlico.io) and
-putting it in `NEXT_PUBLIC_BUNDLER_URL`: the payment preview does query the bundler to
-quote the fee.
+**The public bundler is rate limited.** This is the failure that actually shows up. It has
+two faces:
+
+- *Querying a payment's status* returns "Public API key rate limit exceeded". That's why
+  confirmation doesn't ask the bundler at all: it reads the `UserOperationEvent` the
+  EntryPoint contract emits, straight from the RPC (`src/lib/wdk/receipt.ts`), which gives
+  us both the real transaction hash and whether the operation succeeded.
+- *Pricing a payment* throws `sendRPCRequest(pimlico_getUserOperationGasPrice) failed`,
+  which kills the payment before it starts. `retryPreflight` in `src/lib/wdk/errors.ts`
+  gives it two more chances with a growing pause.
+
+The retry draws a hard line, and it is the most important line in that file: it only fires
+while the error names a call that happens **before anything is signed**. From
+`eth_sendUserOperation` onwards an error throws straight through, because repeating it
+could pay somebody twice — far worse than failing.
+
+**Get a Pimlico key for anything live.** It's free at
+[dashboard.pimlico.io](https://dashboard.pimlico.io). Then:
+
+```bash
+npx vercel env add NEXT_PUBLIC_BUNDLER_URL production --cwd split
+# value: https://api.pimlico.io/v2/11155111/rpc?apikey=YOUR_KEY
+npx vercel deploy --prod --cwd split
+```
+
+The redeploy is not optional: `NEXT_PUBLIC_*` variables are baked into the bundle at build
+time, so adding one changes nothing until the app is built again.
+
+**No library error ever reaches the interface.** Everything the wallet layer throws goes
+through `describeWalletError`, which turns the known failures into sentences and swallows
+the rest into the caller's own wording. A screen that has spent the whole app avoiding the
+words "RPC" and "gas" cannot print them in a red box the one time something breaks. The
+original is logged to the console, for whoever is debugging.
 
 **Once sent, a payment is never reported as failed.** If `transfer()` returned, the money is
 on its way. From that point on, the worst that can happen is that we don't know yet whether

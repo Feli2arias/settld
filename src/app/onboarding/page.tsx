@@ -12,6 +12,7 @@ import { api } from '@/lib/client/api'
 import { saveSeed, saveSession } from '@/lib/client/vault'
 import { encryptSeed } from '@/lib/client/vault-crypto'
 import { deriveAddress, generateSeedPhrase } from '@/lib/wdk/wallet'
+import { describeWalletError } from '@/lib/wdk/errors'
 
 type Step = 'form' | 'creating'
 
@@ -67,7 +68,7 @@ export default function OnboardingPage () {
 
       router.replace('/home')
     } catch (err) {
-      setError(err instanceof Error ? err.message : "We couldn't create your account")
+      setError(describeWalletError(err, "We couldn't create your account"))
       setStep('form')
     }
   }

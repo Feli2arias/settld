@@ -10,6 +10,7 @@
 
 import type { TransferResult } from '@tetherto/wdk-wallet-evm'
 import { USDT_ADDRESS, WDK_CONFIG } from './config'
+import { retryPreflight } from './errors'
 import { centsToTokenUnits, tokenUnitsToCents } from './money'
 import { currentBlock, waitForUserOp } from './receipt'
 
@@ -94,9 +95,11 @@ export function previewTransfer (seedPhrase: string, recipient: string, amountCe
   return withAccount(seedPhrase, async account => {
     const amount = centsToTokenUnits(amountCents)
 
+    // Quoting is read-only, so a rate-limited bundler is worth waiting out rather than
+    // throwing the preview screen away.
     const [balance, quote] = await Promise.all([
       account.getTokenBalance(USDT_ADDRESS),
-      account.quoteTransfer({ token: USDT_ADDRESS, recipient, amount })
+      retryPreflight(() => account.quoteTransfer({ token: USDT_ADDRESS, recipient, amount }))
     ])
 
     const balanceCents = tokenUnitsToCents(balance)
@@ -131,6 +134,9 @@ export interface TransferReceipt {
  *    no error may be reported as "the payment failed": the worst that can happen is that
  *    we don't know yet whether it arrived. That's why `onSubmitted` runs before waiting,
  *    so the caller can put the payment on record whatever happens next.
+ *
+ * The same rule governs the retry below: we only try again while the failure proves
+ * nothing was sent.
  */
 export function sendTransfer (
   seedPhrase: string,
@@ -143,11 +149,14 @@ export function sendTransfer (
     // from here instead of sweeping the whole chain.
     const fromBlock = await currentBlock().catch(() => 'latest')
 
-    const result: TransferResult = await account.transfer({
+    // The retry only fires while the error proves the operation never left — a failed
+    // pricing call. Anything from `eth_sendUserOperation` onwards throws straight through:
+    // repeating it could pay somebody twice, which is far worse than failing.
+    const result: TransferResult = await retryPreflight(() => account.transfer({
       token: USDT_ADDRESS,
       recipient,
       amount: centsToTokenUnits(amountCents)
-    })
+    }))
 
     await onSubmitted?.(result.hash)
 

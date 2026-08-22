@@ -13,6 +13,7 @@ import { saveSeed, saveSession } from '@/lib/client/vault'
 import { WrongPasswordError, decryptSeed } from '@/lib/client/vault-crypto'
 import { deriveAddress, normalizeSeedPhrase } from '@/lib/wdk/wallet'
 import type { User } from '@/lib/split/types'
+import { describeWalletError } from '@/lib/wdk/errors'
 
 type Mode = 'password' | 'phrase'
 
@@ -75,7 +76,7 @@ export default function LoginPage () {
       setError(
         err instanceof WrongPasswordError
           ? 'Wrong password'
-          : err instanceof Error ? err.message : "We couldn't sign you in"
+          : describeWalletError(err, "We couldn't sign you in")
       )
     } finally {
       setBusy(false)
