@@ -61,7 +61,7 @@ plata se mueve de verdad.
 
 1. **Daniel** crea su cuenta. Detrás, WDK genera una seed en el dispositivo y deriva su
    wallet. Daniel nunca ve una seed phrase ni sabe que tiene una.
-2. Daniel toca **Cargar saldo** y aparecen $100.
+2. Daniel toca **Cargar saldo** → **Fondos de prueba** y aparecen $50.
 3. Crea el grupo **Aleph Hackathon** y suma a **@felipe**.
 4. Carga el gasto **Cena, $20**, dividido entre los dos. Split calcula **$10 cada uno**.
 5. **Felipe** abre el grupo y ve **"Debés $10.00"**.
@@ -121,6 +121,40 @@ El truco para no duplicar el markup del grupo es `display: contents`: en mobile 
 contenedores de columna desaparecen y todo cae en una sola columna; a partir de `lg`
 se vuelven flex y arman las dos columnas.
 
+### Cómo se carga saldo
+
+"Cargar saldo" abre un menú con tres caminos, todos escritos para alguien que no sabe
+—ni le importa— que hay una blockchain abajo:
+
+| | Qué hace | Estado |
+|---|---|---|
+| **Con tarjeta** | Abre el checkout de MoonPay vía WDK. Se paga con débito o crédito y los fondos caen directo en la wallet. | Necesita clave (abajo) |
+| **Que te manden** | Muestra un QR y la address para que otro te mande plata. | Funcionando |
+| **Fondos de prueba** | Los $50 de la tesorería. | Funcionando |
+
+La address aparece sólo como respaldo de quien escanea el QR, nunca como el camino
+principal. En ninguna pantalla se dice "wallet", "token" ni "blockchain".
+
+#### Activar el pago con tarjeta
+
+El botón aparece recién cuando hay clave configurada — preferimos no mostrarlo antes que
+ofrecer algo que no lleva a ningún lado. Sacá una clave publicable en
+[dashboard.moonpay.com](https://dashboard.moonpay.com/signup) y agregá a `.env.local`:
+
+```
+NEXT_PUBLIC_MOONPAY_API_KEY="pk_test_..."
+NEXT_PUBLIC_MOONPAY_ENVIRONMENT="sandbox"
+```
+
+En `sandbox` MoonPay simula la compra entera sin cobrar un peso, así que se puede
+demostrar de punta a punta.
+
+⚠️ **Ojo con lo que se promete en la demo:** corremos sobre Sepolia con un USD₮ *mock*,
+que es un contrato de prueba y no un activo que MoonPay pueda vender. El checkout se abre
+y se completa, pero los fondos no van a aparecer en el saldo. Para que la compra acredite
+de verdad hay que pasar a una red real con USD₮ real. Es honesto mostrarlo como "así se
+compra", no como "mirá cómo entra la plata".
+
 ### Cuenta y recuperación
 
 La cuenta **es** la wallet, así que la credencial para volver a entrar es la frase de
@@ -157,6 +191,7 @@ un centavo.
 Funciona end-to-end, verificado en cadena:
 
 - [x] Onboarding que crea la wallet con WDK
+- [x] Cargar saldo: tarjeta (MoonPay vía WDK), QR para recibir, o fondos de prueba
 - [x] Volver a entrar con la frase de recuperación, y cerrar sesión
 - [x] Address y balance reales
 - [x] Grupos y miembros por `@usuario`

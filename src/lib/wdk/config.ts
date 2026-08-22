@@ -50,4 +50,19 @@ export const WDK_CONFIG = {
 
 export const explorerTxUrl = (txHash: string) => `https://sepolia.etherscan.io/tx/${txHash}`
 
+/**
+ * On-ramp con tarjeta (MoonPay, vía WDK).
+ *
+ * Sin la clave publicable, la opción de comprar con tarjeta no se ofrece: preferimos
+ * no mostrarla antes que mostrar un botón que no lleva a ningún lado.
+ */
+export const MOONPAY_API_KEY = process.env.NEXT_PUBLIC_MOONPAY_API_KEY ?? null
+
+/** En sandbox, MoonPay simula la compra entera sin cobrar un peso. */
+export const MOONPAY_ENVIRONMENT =
+  (process.env.NEXT_PUBLIC_MOONPAY_ENVIRONMENT as 'sandbox' | 'production' | undefined) ?? 'sandbox'
+
+/** Qué se compra. MoonPay lo identifica con su propio código de activo. */
+export const MOONPAY_ASSET = process.env.NEXT_PUBLIC_MOONPAY_ASSET ?? 'usdt'
+
 export { BUNDLER_URL }

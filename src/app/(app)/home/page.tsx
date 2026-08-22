@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowDownLeft, ChevronDown, Loader2, Plus } from 'lucide-react'
+import { ArrowDownLeft, ChevronDown, Plus } from 'lucide-react'
 import { AccountDialog } from '@/components/account-dialog'
+import { AddMoneyDialog } from '@/components/add-money-dialog'
 import { Amount } from '@/components/amount'
 import { AppShell } from '@/components/app-shell'
 import { Button } from '@/components/ui/button'
@@ -30,8 +31,6 @@ export default function HomePage () {
   const session = useRequireSession()
   const [balanceCents, setBalanceCents] = useState<number | null>(null)
   const [summaries, setSummaries] = useState<GroupSummary[] | null>(null)
-  const [funding, setFunding] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   /** El saldo sale de la blockchain, no de nuestra base de datos. */
   const refreshBalance = useCallback(async (address: string) => {
@@ -68,29 +67,6 @@ export default function HomePage () {
     return () => { cancelled = true }
   }, [session])
 
-  async function handleAddMoney () {
-    if (!session) return
-
-    setFunding(true)
-    setError(null)
-
-    try {
-      const response = await fetch('/api/faucet', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ address: session.walletAddress })
-      })
-      const payload = await response.json()
-      if (payload.error) throw new Error(payload.error)
-
-      await refreshBalance(session.walletAddress)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'No pudimos cargar saldo')
-    } finally {
-      setFunding(false)
-    }
-  }
-
   if (!session) return null
 
   return (
@@ -115,17 +91,16 @@ export default function HomePage () {
           : <Amount cents={balanceCents} size="hero" />}
 
         <div className="mt-6 flex gap-3">
-          <Button size="pill" onClick={handleAddMoney} disabled={funding}>
-            {funding ? <Loader2 className="animate-spin" aria-hidden /> : <ArrowDownLeft aria-hidden />}
-            {funding ? 'Cargando…' : 'Cargar saldo'}
-          </Button>
+          <AddMoneyDialog
+            address={session.walletAddress}
+            onFunded={() => refreshBalance(session.walletAddress)}
+          >
+            <Button size="pill">
+              <ArrowDownLeft aria-hidden />
+              Cargar saldo
+            </Button>
+          </AddMoneyDialog>
         </div>
-
-        {error && (
-          <p role="alert" className="mt-4 rounded-2xl bg-debit-surface px-4 py-3 text-sm font-semibold text-debit">
-            {error}
-          </p>
-        )}
       </section>
 
       <section aria-labelledby="groups-label" className="flex-1">
