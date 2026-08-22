@@ -62,6 +62,18 @@
   --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-exit: cubic-bezier(0.7, 0, 0.84, 0);
   --ease-emphasis: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* ───────────────────────────────────────────────────────────────────────────
+     Colores de marca de la landing.
+     A diferencia de los tokens de arriba, estos son fijos: no cambian con el tema.
+     Una página de marca se ve igual siempre, como un afiche.
+     ─────────────────────────────────────────────────────────────────────────── */
+  --color-paper: #faf6ee;
+  --color-ink: #16150f;
+  --color-lime: #c3f04e;
+  --color-lime-ink: #204c2c;
+  --color-brand-green: #2c7248;
+  --color-brand-red: #b54a2e;
 }
 
 :root {
@@ -156,6 +168,14 @@
     font-weight: 800;
     letter-spacing: -0.03em;
     line-height: 0.88;
+  }
+
+  /* Titular de la landing: la grotesca pesada, apretada y apilada. La densidad
+     es la identidad, así que el interlineado por debajo de 1 es a propósito. */
+  .display {
+    font-family: var(--font-display);
+    letter-spacing: -0.04em;
+    line-height: 0.85;
   }
 
   /* Micro-etiqueta de sección, en versalitas espaciadas. Es lo que le da el
