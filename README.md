@@ -393,3 +393,7 @@ The USD₮ on this testnet are not Tether Tokens, cannot be redeemed and are wor
 
 > The RPC listed in WDK's official docs (`sepolia.drpc.org`) stopped serving Sepolia on the
 > free plan. If something won't connect, start there.
+
+## License
+
+[MIT](LICENSE)
