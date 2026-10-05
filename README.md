@@ -1,6 +1,8 @@
 # Settld
 
-**Split expenses. Settle instantly.** — Aleph Hackathon 2026, WDK track.
+**Split expenses. Settle instantly.** A shared-expense app where the debt is cleared with a real USD₮ transfer, not a reminder. Built for the Aleph Hackathon 2026, WDK track.
+
+**Live demo:** <https://split-zeta-one.vercel.app> (Ethereum Sepolia testnet, test USD₮ with no real value)
 
 Shared-expense apps tell you who owes you. Settld gets you paid: it works out what people
 owe each other and clears it with a real USD₮ transfer from a self-custodial wallet built
@@ -10,25 +12,56 @@ with [Tether's Wallet Development Kit](https://docs.wdk.tether.io).
 
 ---
 
+## Features
+
+- Self-custodial wallet created on the device with WDK; sign in with username and password
+- Settlds: an expense split between people found by `@username`, with exact integer-cent splitting
+- Pairwise netting of debts, so one payment clears everything between two people
+- Payment preview (recipient, amount, network cost, resulting balance) and explicit confirmation
+- Real USD₮ transfer with ERC-4337 gas paid in USD₮: no user needs ETH
+- Receipt with a transaction hash linked to the block explorer
+- Add money by card (MoonPay via WDK), QR code, or test funds
+- Responsive layouts for mobile, tablet and desktop
+
+## Stack
+
+- Next.js 16 (App Router), React 19, TypeScript
+- Tailwind CSS 4, shadcn/ui, Radix UI, lucide-react
+- [Tether WDK](https://docs.wdk.tether.io): `@tetherto/wdk`, ERC-4337 wallet module, MoonPay fiat protocol
+- WebCrypto (PBKDF2 + AES-GCM) for the password-encrypted wallet bundle
+- Local JSON file or Upstash Redis (REST) for persistence
+- Vitest for tests
+- Deployed on Vercel
+
+---
+
 ## Running it
 
 ```bash
-npm install --prefix split && npm run dev --prefix split
+npm install
+npm run dev
 ```
 
 Open <http://localhost:3000>. To demo with two people, `next dev` also serves the app on
 your local network IP (it prints it on startup): open it from two phones on the same wifi.
 
-You need a `.env.local` with the treasury account's seed, which is what funds new users
-when they tap "Add money" → "Test funds":
+### Environment variables
+
+Create a `.env.local`. Only the names are listed here; set your own values.
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `TREASURY_SEED_PHRASE` | Yes | Seed of the treasury account that funds new users when they tap "Add money" → "Test funds" |
+| `NEXT_PUBLIC_BUNDLER_URL` | Recommended for a live demo | ERC-4337 bundler URL (a Pimlico key avoids public rate limits, see *Known risks*) |
+| `NEXT_PUBLIC_MOONPAY_API_KEY` | Optional | Publishable MoonPay key; enables the card option |
+| `NEXT_PUBLIC_MOONPAY_ENVIRONMENT` | Optional | MoonPay environment, e.g. `sandbox` |
+| `NEXT_PUBLIC_MOONPAY_ASSET` | Optional | Asset code to buy through MoonPay |
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Optional | Upstash Redis REST credentials; injected by Vercel's integration |
+
+Example:
 
 ```
 TREASURY_SEED_PHRASE="the twelve words of the treasury wallet"
-```
-
-Optional but **strongly recommended for a live demo** (see *Known risks*):
-
-```
 NEXT_PUBLIC_BUNDLER_URL="https://api.pimlico.io/v2/11155111/rpc?apikey=YOUR_API_KEY"
 ```
 
@@ -45,15 +78,15 @@ Careful: if you run locally with those variables present, you're writing to the 
 database as production. To work against the local file instead, without touching them:
 
 ```bash
-npm run dev:local --prefix split
+npm run dev:local
 ```
 
 Other commands:
 
 ```bash
-npm run test --prefix split        # tests for the debt logic and the money handling
-npm run typecheck --prefix split   # tsc
-npm run build --prefix split       # production build
+npm run test        # tests for the debt logic and the money handling
+npm run typecheck   # tsc
+npm run build       # production build
 ```
 
 ---
@@ -317,9 +350,9 @@ could pay somebody twice — far worse than failing.
 [dashboard.pimlico.io](https://dashboard.pimlico.io). Then:
 
 ```bash
-npx vercel env add NEXT_PUBLIC_BUNDLER_URL production --cwd split
+npx vercel env add NEXT_PUBLIC_BUNDLER_URL production
 # value: https://api.pimlico.io/v2/11155111/rpc?apikey=YOUR_KEY
-npx vercel deploy --prod --cwd split
+npx vercel deploy --prod
 ```
 
 The redeploy is not optional: `NEXT_PUBLIC_*` variables are baked into the bundle at build
